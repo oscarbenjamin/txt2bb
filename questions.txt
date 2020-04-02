@@ -1,0 +1,21 @@
+# Here are a load of questions
+# These lines are comments
+# Blank lines are ignored
+
+------------------ Question
+
+type: MA
+prompt: Which of these ODEs is linear?
+correct: $\frac{dx}{dt} + x$
+correct: $\frac{dx}{dt} + \cos{t}$
+incorrect: $\frac{dx}{dt} + \cos{x}$
+incorrect: $\frac{dy}{dt} + y^2$
+
+------------------ Question
+
+type: MC
+prompt: What is the general solution of $\frac{dx}{dt} = x$?
+correct: $C\mathrm{e}^t$
+incorrect: $C\sin{t}$
+incorrect: $C\cos{t}$
+incorrect: $C\log{t}$

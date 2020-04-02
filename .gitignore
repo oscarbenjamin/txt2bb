@@ -1,0 +1,6 @@
+*.aux
+*.log
+*.pdf
+*.done
+*.tex
+*_bb.txt
