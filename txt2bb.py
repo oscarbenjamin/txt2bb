@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-txt2latex.py
+txt2bb.py
 v0.1 (2nd April 2020)
 Oscar Benjamin
 
@@ -14,12 +14,12 @@ First write a questions file.
 
 Convert questions to LaTeX and generate PDF:
 
-    $ ./txt2latex.py --latex myquestions.txt > myquestions.tex
+    $ ./txt2bb.py --latex myquestions.txt > myquestions.tex
     $ pdflatex myquestions.tex
 
 Generate input file for Blackboard:
 
-    $ ./txt2latex.py --bb myquestions.txt > myquestions_bb.txt
+    $ ./txt2bb.py --bb myquestions.txt > myquestions_bb.txt
 
 The file myquestions_bb.txt can now be uploaded to Blackboard using the
 "Upload questions" button.
@@ -34,7 +34,7 @@ import sys
 
 
 def main(mode, filename):
-    """ $ ./txt2latex.py (--latex|--b) FILE """
+    """ $ ./txt2bb.py (--latex|--b) FILE """
 
     with open(filename) as infile:
         questions = txt2py(infile)
