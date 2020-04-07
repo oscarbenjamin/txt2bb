@@ -31,6 +31,7 @@ and saved again (without any editing) which causes the latex ot be rendered.
 
 
 import sys
+import re
 
 
 def main(mode, filename):
@@ -52,7 +53,7 @@ def main(mode, filename):
     return 0
 
 
-def txt2py(lines):
+def txt2py(infile):
     """Parse input text format into Python objects.
 
     list of lines (str) -> list of questions (dict)
@@ -62,8 +63,9 @@ def txt2py(lines):
     keys_multiple = {"correct", "incorrect"}
 
     questions = []
-
-    lines = map(str.strip, lines)
+    #format multi-lines for bb 
+    text = re.sub(' *\n> *','<br>',infile.read())
+    lines = text.splitlines()
 
     for lineno, line in enumerate(lines, 1):
         # Skip comments or blank lines
@@ -77,7 +79,7 @@ def txt2py(lines):
 
         # key : val
         elif ':' in line:
-            key, val = line.split(':')
+            key, val = line.split(':',1)
             key = key.strip()
             val = val.strip()
             if key not in keys:

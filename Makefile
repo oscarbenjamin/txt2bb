@@ -2,7 +2,7 @@
 
 all: questions.done
 
-%.done: %.pdf %_bb.txt
+%.done: %.pdf %_bb.txt txt2bb.py
 	touch $@
 
 %.tex: %.txt
