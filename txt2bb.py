@@ -38,22 +38,21 @@ def main(mode, filename):
     """ $ ./txt2bb.py (--latex|--b) FILE """
 
     with open(filename) as infile:
-        questions = txt2py(infile)
+        questions = txt2py(mode,infile)
 
     if mode == "--latex":
         lines = q2latex(questions)
-    elif mode == "--bb":
-        lines = q2bb(questions)
     else:
-        raise ValueError("Bad mode %r" % mode)
+        lines = q2bb(questions)
 
     for line in lines:
+        #print(repr(line).strip("'"))
         print(line)
 
     return 0
 
 
-def txt2py(infile):
+def txt2py(mode, infile):
     """Parse input text format into Python objects.
 
     list of lines (str) -> list of questions (dict)
@@ -63,9 +62,17 @@ def txt2py(infile):
     keys_multiple = {"correct", "incorrect"}
 
     questions = []
-    #format multi-lines for bb 
-    text = re.sub(' *\n> *','<br>',infile.read())
-    lines = text.splitlines()
+    if mode == "--latex":
+        #format multi-lines for latex 
+        text = re.sub(' *\n> *',r'\\\\',infile.read())
+        lines = text.splitlines()
+    elif mode == "--bb":
+        #format multi-lines for bb 
+        text = re.sub(' *\n> *','<br>',infile.read())
+        lines = text.splitlines()
+        
+    else:
+        raise ValueError("Bad mode %r" % mode)
 
     for lineno, line in enumerate(lines, 1):
         # Skip comments or blank lines
