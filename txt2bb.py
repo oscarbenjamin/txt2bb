@@ -32,7 +32,14 @@ and saved again (without any editing) which causes the latex ot be rendered.
 
 import sys
 import re
+import q_types
 
+Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'NUM', 'SR', 'OP',
+        'JUMBLED_SENTENCE', 'QUIZ_BOWL')
+IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
+        'tolerance', 'variable', 'q_word', 'q_phrase')        
+HANDLERS = dict(zip(Q_TYPES,q_types.q_handlers))
+#test = q_types.MC({'prompt':'wassap','type':'MC','correct':['ye'],'incorrect':['na']})
 
 def main(mode, filename):
     """ $ ./txt2bb.py (--latex|--b) FILE """
@@ -58,9 +65,6 @@ def txt2py(mode, infile):
     list of lines (str) -> list of questions (dict)
     """
 
-    keys = {"type", "prompt", "correct", "incorrect"}
-    keys_multiple = {"correct", "incorrect"}
-
     questions = []
     if mode == "--latex":
         #format multi-lines for latex 
@@ -70,7 +74,6 @@ def txt2py(mode, infile):
         #format multi-lines for bb 
         text = re.sub(' *\n> *','<br>',infile.read())
         lines = text.splitlines()
-        
     else:
         raise ValueError("Bad mode %r" % mode)
 
@@ -89,19 +92,18 @@ def txt2py(mode, infile):
             key, val = line.split(':',1)
             key = key.strip()
             val = val.strip()
-            if key not in keys:
+            if key not in IN_TYPES + ('type', 'prompt'):
                 msg = "Line %s: Unrecognised key %s" % (lineno, key)
                 raise ValueError(msg)
 
             # some keys can be repeated so collect valuse in a list
-            if key in keys_multiple:
+            if key in IN_TYPES:
                 if key not in question:
                     question[key] = [val]
                 else:
                     question[key].append(val)
-            else:
+            elif key in ('type', 'prompt'):
                 question[key] = val
-
     return questions
 
 
@@ -116,15 +118,11 @@ def q2bb(questions):
 
 def q2bb1(question):
     """Convert question into Blackboard tab delimited format"""
-    items = [question["type"], question["prompt"]]
-    if question["type"] in ("MC", "MA"):
-        for correct in ("correct", "incorrect"):
-            for ans in question[correct]:
-                items.append(ans)
-                items.append(correct)
+    if question["type"] in Q_TYPES:
+        handler = HANDLERS[question["type"]](question)
     else:
         raise ValueError("Unrecognised question type")
-
+    items = handler.bb()
     # Output must be tab-delimited
     # Need double-$ in Blackboard
     return "\t".join(items).replace("$", "$$")
@@ -164,14 +162,11 @@ def q2latex1(question):
     The result is a fragment of latex.
     """
     yield question["prompt"]
-    if question["type"] in ("MC", "MA"):
-        answers = []
-        for correct in ("correct", "incorrect"):
-            for ans in question[correct]:
-                answers.append((correct, ans))
-
+    if question["type"] in Q_TYPES:
+        handler = HANDLERS[question["type"]](question)
+        items = handler.latex()
         latex_item = lambda item: [r"\emph{%s}: %s" % item]
-        yield from latex_enumerate(answers, latex_item)
+        yield from latex_enumerate(items, latex_item)
     else:
         raise ValueError("Unrecognised question type")
 
