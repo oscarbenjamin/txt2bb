@@ -34,12 +34,11 @@ import sys
 import re
 import q_types
 
-Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'NUM', 'SR', 'OP',
+Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'QUIZ_BOWL')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')        
 HANDLERS = dict(zip(Q_TYPES,q_types.q_handlers))
-#test = q_types.MC({'prompt':'wassap','type':'MC','correct':['ye'],'incorrect':['na']})
 
 def main(mode, filename):
     """ $ ./txt2bb.py (--latex|--b) FILE """
@@ -53,7 +52,6 @@ def main(mode, filename):
         lines = q2bb(questions)
 
     for line in lines:
-        #print(repr(line).strip("'"))
         print(line)
 
     return 0
@@ -104,6 +102,7 @@ def txt2py(mode, infile):
                     question[key].append(val)
             elif key in ('type', 'prompt'):
                 question[key] = val
+    
     return questions
 
 
@@ -166,7 +165,15 @@ def q2latex1(question):
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
         latex_item = lambda item: [r"\emph{%s}: %s" % item]
-        yield from latex_enumerate(items, latex_item)
+        if not items:
+            pass
+        #enumeration not needed if 1 element or different pairings used
+        elif len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
+            for item in items:
+                yield ""
+                yield from latex_item(item)
+        else:
+            yield from latex_enumerate(items, latex_item)
     else:
         raise ValueError("Unrecognised question type")
 

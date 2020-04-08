@@ -5,7 +5,7 @@
 ------------------ Question
 
 type: MA
-prompt: Which of these ODEs is linear?
+prompt  :    Which of these ODEs is linear?
 correct: $\frac{dx}{dt} + x$
 correct: $\frac{dx}{dt} + \cos{t}$
 incorrect: $\frac{dx}{dt} + \cos{x}$
@@ -19,3 +19,66 @@ correct: $C\mathrm{e}^t$
 incorrect: $C\sin{t}$
 incorrect: $C\cos{t}$
 incorrect: $C\log{t}$
+
+------------------ Question
+
+type: TF
+prompt: This question type has worked
+answer: true
+
+------------------ Question
+
+type: ESS
+prompt: Explain how well this works
+example: exceptionally well!
+
+------------------ Question
+
+type: ORD
+prompt: What order are the last three letters of the alphabet?
+answer: x
+answer: y
+answer: z
+
+------------------ Question
+
+type: MAT
+prompt: Match the letters to their position in the alphabet
+match_a: a
+match_b: 1
+match_a: b
+match_b: 2
+match_a: c
+match_b: 3
+
+------------------ Question
+
+type: FIL
+prompt: Upload a file please
+
+------------------ Question
+
+type: NUM
+prompt: Out of 10 how good is this question
+answer: 10
+tolerance: 1
+
+------------------ Question
+
+type: SR
+prompt: In a few words, how is this going
+example: very well
+
+------------------ Question
+
+type: OP
+prompt: How good is this going so far?
+
+------------------ Question
+
+type: JUMBLED_SENTENCE
+prompt: The quick [colour] fox [action] over the lazy [animal]. The laziest animal is [laziest].
+answer: yellow
+answer: brown : colour
+answer: jumps : action
+answer: dog : animal, laziest
