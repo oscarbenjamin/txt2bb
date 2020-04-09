@@ -41,7 +41,7 @@ provided questions.txt file for examples. Explanations on how each question
 type is formatted can be found
 [here](https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf).
 
-###NOTES:
+### NOTES:
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
 second colon and are separated by commas if multiple variables correspond to
