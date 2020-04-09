@@ -36,19 +36,23 @@ incorrect: $C\cos{t}$
 incorrect: $C\log{t}$
 ```
 All questions must begin with the dashes shown in the example, they must
-specify a valid type, and a prompt (the question).See the
+specify a valid type, and a prompt (the question). See the
 provided questions.txt file for examples. Explanations on how each question
 type is formatted can be found
 [here](https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf).
+
 ###NOTES:
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
 second colon and are separated by commas if multiple variables correspond to
 the choice. 
+
 For question types `ESS` and `SR` there is the option to add an example
 answer, preceded by `example: `. 
+
 For question type `NUM`, there is the option to add a tolerance for the answer
 which is preceded by `tolerance: ` in the questions file.
+
 For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 
 Usage
