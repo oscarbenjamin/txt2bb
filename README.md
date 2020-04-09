@@ -46,7 +46,7 @@ type is formatted can be found
 If the question should contain a linebreak, start each new line with `>`. 
 
 
-If you wish to ignore a linebreak in the input file preced the line with `<`.
+If you wish to ignore a linebreak in the input file preced the line with `\`.
 
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
@@ -64,7 +64,7 @@ For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 Usage
 -----
 
-Once you have your questions written up you can then convert them eihter to
+Once you have your questions written up you can then convert them either to
 latex format to view locally or to Blackboards tab-delimited format. You can
 see the latex format with
 ```
@@ -101,3 +101,10 @@ anything to trigger the latex rendering (maybe there is a better way...).
 [This help
 page](https://blackboard.secure.force.com/publickbarticleview?id=kA339000000L6QH)
 from blackboard seems to suggest there is not another way.
+However, there may be a workaround by rendering offline and uploading a raw XML
+format file. This needs to be looked into still.
+
+Also, there is a limit to the latex commands that can be passed to Blackboard.
+A full list is available
+[here](https://web.archive.org/web/20180819051527/http://www.wiris.net/demo/editor/docs/latex-coverage/).
+Importantly, this does not include certain amsmath commands such as `\begin{align}`. Perhaps a workaround can be found.
