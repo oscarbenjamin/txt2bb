@@ -42,6 +42,12 @@ type is formatted can be found
 [here](https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf).
 
 ### NOTES:
+
+If the question should contain a linebreak, start each new line with `>`. 
+
+
+If you wish to ignore a linebreak in the input file preced the line with `<`.
+
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
 second colon and are separated by commas if multiple variables correspond to

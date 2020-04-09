@@ -67,10 +67,12 @@ def txt2py(mode, infile):
     if mode == "--latex":
         #format multi-lines for latex 
         text = re.sub(' *\n> *',r'\\\\',infile.read())
+        text = re.sub(' *\n< *',' ', text)
         lines = text.splitlines()
     elif mode == "--bb":
         #format multi-lines for bb 
         text = re.sub(' *\n> *','<br>',infile.read())
+        text = re.sub(' *\n< *',' ', text)
         lines = text.splitlines()
     else:
         raise ValueError("Bad mode %r" % mode)
@@ -129,6 +131,7 @@ def q2bb1(question):
 
 LATEX_START = r"""
 \documentclass{article}
+\usepackage{amsmath}
 \begin{document}
 """
 
