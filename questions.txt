@@ -73,7 +73,7 @@ prompt: Upload a file please
 ------------------ Question
 
 type: NUM
-prompt: Out of 10 how good is this question
+prompt: Out of 10 how good is this question?
 answer: 10
 tolerance: 1
 

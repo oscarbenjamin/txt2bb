@@ -31,8 +31,11 @@ Class for each question type available on Blackboard. Fill-in and quizbowl quest
 types are not included
 
 Each class corresponds to one of Blackboard's question types, for example, MC
-is multiple choice. Full documentation for each question type and its format
-can be found here:
+is multiple choice. Full documentation for each question type can be found here:
+
+https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Question_Types
+
+The way in which these questions are formatted and named can be found here:
 
 https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf
 
@@ -135,7 +138,7 @@ class ORD(Question):
         return [self.type, self.prompt, *self.question['answer']]
 
     def latex(self):
-        items = [(str(num), ans) for num, ans in enumerate(self.question['answer'],1)]
+        items = [(num, ans) for num, ans in enumerate(self.question['answer'],1)]
         return items
 
 
@@ -191,12 +194,12 @@ class NUM(Question):
 
 
 class SR(ESS):
-    #Inherits functions form essay question class as they are identical
+    # Inherits functions form essay question class as they are identical
     pass
         
 
 class OP(FIL):
-    #Inherits functions form file upload question class as they are identical
+    # Inherits functions form file upload question class as they are identical
     pass
 
 
@@ -207,16 +210,16 @@ class JUMBLED_SENTENCE(Question):
         self.mappings = {}
         var_list = []
         for ans in answers:
-            #check if variable(s) have been linked to the choice
+            # Check if variable(s) have been linked to the choice
             if ':' in ans:
                 choice, variables = map(str.strip,ans.split(':'))
-                #check if multiple variables (separated by commas) are present
+                # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',variables):
-                    #split at commas if not escaped with \
+                    # Split at commas if not escaped with \
                     var = list(map(str.strip, variables.split(',')))
                     var_list += var
                 else:
-                    #otherwise save the single variable (removing any escape slashes)
+                    # Otherwise save the single variable (removing any escape slashes)
                     var = variables.replace('\\','')
                     var_list.append(var)
             else:
@@ -261,7 +264,7 @@ class QUIZ_BOWL(Question):
     def latex(self):
         pass
 
-#tuple of all classes for use in dictionary in txt2bb 
+# Tuple of all classes for use in dictionary in txt2bb 
 q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, QUIZ_BOWL)
 
 
@@ -299,8 +302,8 @@ def txt2py(infile):
     """
 
     questions = []
-        #text = re.sub(' *\n> *',r'\\\\',infile.read())
-        #text = re.sub(' *\n> *','<br>',infile.read())
+    # Inserting linebreak character for --bb case (<br>), this then 
+    # functions as placeholder for --latex case (\\) 
     text = re.sub(' *\n> *','<br>',infile.read())
     text = re.sub(r' *\n\\ *',' ', text)
     lines = text.splitlines()
@@ -384,7 +387,7 @@ def q2latex(questions):
     yield from LATEX_END.splitlines()
 
 def latex_item(item):
-    #replaces line break symbol <br> from txt2py() and returns latex formatted line
+    # Replaces line break symbol <br> from txt2py() and returns latex formatted line
     item = (item[0],item[1].replace('<br>',r'\\'))
     return [r"\emph{%s}: %s" % item]
 
@@ -402,7 +405,7 @@ def q2latex1(question):
         items = handler.latex()
         if not items:
             pass
-        #enumeration not needed if 1 element or different pairings used
+        # Enumeration not needed if 1 element or different pairings used
         elif len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
             for item in items:
                 yield ""
