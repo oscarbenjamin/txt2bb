@@ -38,7 +38,10 @@ prompt: Explain why the matrix,
 \1 & 2 & 3\\
 \2 & 9 & 2\\
 \4 & 8 & 12\end{bmatrix}$, will have an eigenvalue equal to 0.
-example: The rank of this matrix is...
+example: The rank of this matrix is 2, meaning the nullspace has dimension 1.
+\The number of zero eigenvalues is directly linked to the dimensionality of the
+nullspace as this describes how many eigenvectors will be reduced to the zero
+vector.
 
 ------------------ Question
 
@@ -55,44 +58,55 @@ answer: The mean of $X$
 ------------------ Question
 
 type: MAT
-prompt: Match the letters to their position in the alphabet
-match_a: an answer spread
-\over two lines but not to be registered 
-match_b: an answer to be split
->over two lines
-match_a: b
-match_b: 2
-match_a: c
-match_b: 3
+prompt: For the complex number, $z = 2+3j$, match the following expressions to
+\their corresponding value.
+match_a: $|z|$
+match_b: $\sqrt{13}$
+match_a: $\mathrm{Re}\{z\}$
+match_b: $2$
+match_a: $z^2$
+match_b: $-5+6j$
+match_a: $\bar{z}$
+match_b: $2-3j$
 
 ------------------ Question
 
 type: FIL
-prompt: Upload a file please
+prompt: Please upload a pdf showing your work for questions 1 to 6.
 
 ------------------ Question
 
 type: NUM
-prompt: Out of 10 how good is this question?
-answer: 10
-tolerance: 1
+prompt: Using partial fractions, calculate the definite integral
+>$\int_{3}^{4}\frac{3x}{(x+1)(x-2)}\mathrm{d}x$ to 3 significant figures.
+answer: 1.6094379
+tolerance: 0.01
 
 ------------------ Question
 
 type: SR
-prompt: In a few words, how is this going
-example: very well
+prompt: Briefly explain what is meant by 'indeterminate form' and what rule is
+\often employed to solve this problem.
+example: An expression which is represented as the quotient of two
+\functions is said to be in indeterminate form if the limit cannot be
+\calculated by simply considering the two functions separately. In this case,
+\L'Hopital's rule can be used
 
 ------------------ Question
 
 type: OP
-prompt: How good is this going so far?
+prompt: Maths exams taken online reflect my ability accurately.
 
 ------------------ Question
 
 type: JUMBLED_SENTENCE
-prompt: The quick [colour] fox [action] over the lazy [animal]. The laziest animal is [laziest].
-answer: yellow
-answer: brown : colour
-answer: jumps : action
-answer: dog : animal, laziest
+prompt: The [a] of vectors $(5,-1,1)^\top$ and 
+\$(1,2,-3)^\top$ is 0. The [b] is
+\$(1,-16,11)^\top$. From this we can tell that the two
+\vectors are [c]. If the [d] of two different, nonzero, vectors was
+\$(0,0,0)^\top$, then those vectors must be [e].
+answer: cross product : b, d
+answer: dot product : a
+answer: magnitude
+answer: parallel : e
+answer: perpendicular : c
