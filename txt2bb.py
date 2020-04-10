@@ -27,25 +27,24 @@ The file myquestions_bb.txt can now be uploaded to Blackboard using the
 NOTE: Blackboard will not render any embedded latex automatically wen uploaded
 in this way. Each question must afterwards be opened in the Blackboard editor
 and saved again (without any editing) which causes the latex ot be rendered.
-"""
-import sys
-import re
-
-#--------------------------------Question Classes---------------------------------#
-"""
 Class for each question type available on Blackboard. Fill-in and quizbowl question
 types are not included
 
 Each class corresponds to one of Blackboard's question types, for example, MC
 is multiple choice. Full documentation for each question type and its format
 can be found here:
+
 https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf
 
 Each class contains functions bb() and latex(), invoked by the command line
 argument --bb or --latex. These functions format the question (dict) into the
 appropriate (list) format for the specified file type.
 """
+import sys
+import re
 
+
+#--------------------------------Question Classes---------------------------------#
 class Question:
     """Defualt initialisation for all question handling classes
     
@@ -136,7 +135,7 @@ class ORD(Question):
         return [self.type, self.prompt, *self.question['answer']]
 
     def latex(self):
-        items = [(num, ans) for num, ans in enumerate(self.question['answer'],1)]
+        items = [(str(num), ans) for num, ans in enumerate(self.question['answer'],1)]
         return items
 
 
@@ -278,12 +277,14 @@ def main(mode, filename):
     """ $ ./txt2bb.py (--latex|--b) FILE """
 
     with open(filename) as infile:
-        questions = txt2py(mode,infile)
+        questions = txt2py(infile)
 
     if mode == "--latex":
         lines = q2latex(questions)
-    else:
+    elif mode == "--bb":
         lines = q2bb(questions)
+    else:
+        raise ValueError("Bad mode %r" % mode)
 
     for line in lines:
         print(line)
@@ -291,26 +292,19 @@ def main(mode, filename):
     return 0
 
 
-def txt2py(mode, infile):
+def txt2py(infile):
     """Parse input text format into Python objects.
 
     list of lines (str) -> list of questions (dict)
     """
 
     questions = []
-    if mode == "--latex":
-        #format multi-lines for latex 
-        text = re.sub(' *\n> *',r'\\\\',infile.read())
-        text = re.sub(r' *\n\\ *',' ', text)
-        lines = text.splitlines()
-    elif mode == "--bb":
-        #format multi-lines for bb 
-        text = re.sub(' *\n> *','<br>',infile.read())
-        text = re.sub(r' *\n\\ *',' ', text)
-        lines = text.splitlines()
-    else:
-        raise ValueError("Bad mode %r" % mode)
-
+        #text = re.sub(' *\n> *',r'\\\\',infile.read())
+        #text = re.sub(' *\n> *','<br>',infile.read())
+    text = re.sub(' *\n> *','<br>',infile.read())
+    text = re.sub(r' *\n\\ *',' ', text)
+    lines = text.splitlines()
+    
     for lineno, line in enumerate(lines, 1):
         # Skip comments or blank lines
         if not line or line.startswith('#'):
@@ -389,6 +383,10 @@ def q2latex(questions):
     yield from latex_enumerate(questions, q2latex1)
     yield from LATEX_END.splitlines()
 
+def latex_item(item):
+    #replaces line break symbol <br> from txt2py() and returns latex formatted line
+    item = (item[0],item[1].replace('<br>',r'\\'))
+    return [r"\emph{%s}: %s" % item]
 
 def q2latex1(question):
     """Convert single question to latex
@@ -397,11 +395,11 @@ def q2latex1(question):
 
     The result is a fragment of latex.
     """
-    yield question["prompt"]
+    
+    yield question["prompt"].replace('<br>',r'\\\\')
     if question["type"] in Q_TYPES:
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
-        latex_item = lambda item: [r"\emph{%s}: %s" % item]
         if not items:
             pass
         #enumeration not needed if 1 element or different pairings used

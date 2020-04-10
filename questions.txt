@@ -24,10 +24,10 @@ incorrect: $C\log{t}$
 
 type: TF
 prompt: The matrix, 
-<$A = \begin{bmatrix}
-<1 & 2 & 3\\
-<2 & 9 & 2\\
-<4 & 8 & 12\end{bmatrix}$, has rank 2.
+\$A = \begin{bmatrix}
+\1 & 2 & 3\\
+\2 & 9 & 2\\
+\4 & 8 & 12\end{bmatrix}$, has rank 2.
 answer: true
 
 ------------------ Question
@@ -38,15 +38,15 @@ prompt: Explain why the matrix,
 \1 & 2 & 3\\
 \2 & 9 & 2\\
 \4 & 8 & 12\end{bmatrix}$, will have an eigenvalue equal to 0.
-example: exceptionally well!
+example: The rank of this matrix is...
 
 ------------------ Question
 
 type: ORD
 prompt: $X$ follows a continuous distribution and has probability density
 \function
->\[\begin{array}{l}f_X(x) = \frac{1}{2}x, \hspace{10pt} 0 \leq X \leq 2\\
->\hspace{30pt}= 0, \hspace{10pt} \mathrm{elsewhere.}\end{array}\]
+>$\begin{array}{l}f_X(x) = \frac{1}{2}x, \quad 0 \leq X \leq 2\\
+\\quad\quad \quad = 0, \quad \mathrm{elsewhere.}\end{array}$
 >Order the following probability measures with the largest at the top.
 answer: The mode of $X$
 answer: The median of $X$
@@ -56,8 +56,10 @@ answer: The mean of $X$
 
 type: MAT
 prompt: Match the letters to their position in the alphabet
-match_a: a
-match_b: 1
+match_a: an answer spread
+\over two lines but not to be registered 
+match_b: an answer to be split
+>over two lines
 match_a: b
 match_b: 2
 match_a: c
