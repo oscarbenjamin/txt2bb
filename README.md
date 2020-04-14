@@ -119,5 +119,5 @@ format file. This needs to be looked into still.
 
 Also, there is a limit to the latex commands that can be passed to Blackboard.
 A full list is available
-[here](https://web.archive.org/web/20180819051527/http://www.wiris.net/demo/editor/docs/latex-coverage/).
+[here](http://www.wiris.net/client/editor/docs/latex-coverage/).
 Importantly, this does not include certain amsmath commands such as `\begin{align}`. Perhaps a workaround can be found.
