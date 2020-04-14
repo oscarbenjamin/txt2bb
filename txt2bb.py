@@ -305,7 +305,8 @@ def txt2py(infile):
     # Inserting linebreak character for --bb case (<br>), this then 
     # functions as placeholder for --latex case (\\) 
     text = re.sub(' *\n> *','<br>',infile.read())
-    text = re.sub(r' *\n\\ *',' ', text)
+    text = re.sub(r' *\\\\\n *',r'\\\\', text)
+    text = re.sub(r' *\\\n *',' ', text)
     lines = text.splitlines()
     
     for lineno, line in enumerate(lines, 1):

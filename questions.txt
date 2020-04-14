@@ -23,33 +23,33 @@ incorrect: $C\log{t}$
 ------------------ Question
 
 type: TF
-prompt: The matrix, 
-\$A = \begin{bmatrix}
-\1 & 2 & 3\\
-\2 & 9 & 2\\
-\4 & 8 & 12\end{bmatrix}$, has rank 2.
+prompt: The matrix, \
+$A = \begin{bmatrix}\
+1 & 2 & 3\\
+2 & 9 & 2\\
+4 & 8 & 12\end{bmatrix}$, has rank 2.
 answer: true
 
 ------------------ Question
 
 type: ESS
-prompt: Explain why the matrix, 
-\$A = \begin{bmatrix}
-\1 & 2 & 3\\
-\2 & 9 & 2\\
-\4 & 8 & 12\end{bmatrix}$, will have an eigenvalue equal to 0.
-example: The rank of this matrix is 2, meaning the nullspace has dimension 1.
-\The number of zero eigenvalues is directly linked to the dimensionality of the
-nullspace as this describes how many eigenvectors will be reduced to the zero
+prompt: Explain why the matrix, \
+$A = \begin{bmatrix}\
+1 & 2 & 3\\
+2 & 9 & 2\\
+4 & 8 & 12\end{bmatrix}$, will have an eigenvalue equal to 0.
+example: The rank of this matrix is 2, meaning the nullspace has dimension 1.\
+The number of zero eigenvalues is directly linked to the dimensionality of the\
+nullspace as this describes how many eigenvectors will be reduced to the zero\
 vector.
 
 ------------------ Question
 
 type: ORD
-prompt: $X$ follows a continuous distribution and has probability density
-\function
+prompt: $X$ follows a continuous distribution and has probability density\
+function
 >$\begin{array}{l}f_X(x) = \frac{1}{2}x, \quad 0 \leq X \leq 2\\
-\\quad\quad \quad = 0, \quad \mathrm{elsewhere.}\end{array}$
+\quad\quad \quad = 0, \quad \mathrm{elsewhere.}\end{array}$
 >Order the following probability measures with the largest at the top.
 answer: The mode of $X$
 answer: The median of $X$
@@ -58,8 +58,8 @@ answer: The mean of $X$
 ------------------ Question
 
 type: MAT
-prompt: For the complex number, $z = 2+3j$, match the following expressions to
-\their corresponding value.
+prompt: For the complex number, $z = 2+3j$, match the following expressions to\
+their corresponding value.
 match_a: $|z|$
 match_b: $\sqrt{13}$
 match_a: $\mathrm{Re}\{z\}$
@@ -77,20 +77,20 @@ prompt: Please upload a pdf showing your work for questions 1 to 6.
 ------------------ Question
 
 type: NUM
-prompt: Using partial fractions, calculate the definite integral
->$\int_{3}^{4}\frac{3x}{(x+1)(x-2)}\mathrm{d}x$ to 3 significant figures.
+prompt: Using partial fractions, calculate the definite integral\
+$\int_{3}^{4}\frac{3x}{(x+1)(x-2)}\mathrm{d}x$ to 3 significant figures.
 answer: 1.6094379
 tolerance: 0.01
 
 ------------------ Question
 
 type: SR
-prompt: Briefly explain what is meant by 'indeterminate form' and what rule is
-\often employed to solve this problem.
-example: An expression which is represented as the quotient of two
-\functions is said to be in indeterminate form if the limit cannot be
-\calculated by simply considering the two functions separately. In this case,
-\L'Hopital's rule can be used
+prompt: Briefly explain what is meant by 'indeterminate form' and what rule is\
+often employed to solve this problem.
+example: An expression which is represented as the quotient of two\
+functions is said to be in indeterminate form if the limit cannot be\
+calculated by simply considering the two functions separately. In this case,\
+L'Hopital's rule can be used
 
 ------------------ Question
 
@@ -100,11 +100,10 @@ prompt: Maths exams taken online reflect my ability accurately.
 ------------------ Question
 
 type: JUMBLED_SENTENCE
-prompt: The [a] of vectors $(5,-1,1)^\top$ and 
-\$(1,2,-3)^\top$ is 0. The [b] is
-\$(1,-16,11)^\top$. From this we can tell that the two
-\vectors are [c]. If the [d] of two different, nonzero, vectors was
-\$(0,0,0)^\top$, then those vectors must be [e].
+prompt: The [a] of vectors $(5,-1,1)^\top$ and $(1,2,-3)^\top$ is 0. The [b]\
+is $(1,-16,11)^\top$. From this we can tell that the two vectors are [c]. If\
+the [d] of two different, nonzero, vectors was $(0,0,0)^\top$, then those\
+vectors must be [e].
 answer: cross product : b, d
 answer: dot product : a
 answer: magnitude
