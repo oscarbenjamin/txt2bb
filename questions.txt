@@ -50,7 +50,7 @@ prompt: $X$ follows a continuous distribution and has probability density\
 function
 >$\begin{array}{l}f_X(x) = \frac{1}{2}x, \quad 0 \leq X \leq 2\\
 \quad\quad \quad = 0, \quad \mathrm{elsewhere.}\end{array}$
->Order the following probability measures with the largest at the top.
+>Number the following probability measures from 1 to 3, with 1 being the largest.
 answer: The mode of $X$
 answer: The median of $X$
 answer: The mean of $X$
