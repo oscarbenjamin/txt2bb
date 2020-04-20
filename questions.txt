@@ -65,7 +65,7 @@ match_b: $\sqrt{13}$
 match_a: $\mathrm{Re}\{z\}$
 match_b: $2$
 match_a: $z^2$
-match_b: $-5+6j$
+match_b: $-5+12j$
 match_a: $\bar{z}$
 match_b: $2-3j$
 
@@ -101,7 +101,7 @@ prompt: Maths exams taken online reflect my ability accurately.
 
 type: JUMBLED_SENTENCE
 prompt: The [a] of vectors $(5,-1,1)^\top$ and $(1,2,-3)^\top$ is 0. The [b]\
-is $(1,-16,11)^\top$. From this we can tell that the two vectors are [c]. If\
+is $(1,16,11)^\top$. From this we can tell that the two vectors are [c]. If\
 the [d] of two different, nonzero, vectors was $(0,0,0)^\top$, then those\
 vectors must be [e].
 answer: cross product : b, d
