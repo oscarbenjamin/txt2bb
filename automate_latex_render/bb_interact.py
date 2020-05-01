@@ -10,7 +10,7 @@ equations without needing to manually edit/save each question.
 
 Usage
 ========
-This is designed for a Blackboard test once it has been uploaded but LAtex
+This is designed for a Blackboard test once it has been uploaded but Latex
 equations have not yet rendered.
 Once the test is created, click its drop down menu and select 'edit test' which
 will take you to the editing page in which the questions can be edited
@@ -18,14 +18,13 @@ indivually. Copy the current url of this page to your clipboard.
 
 The file can then be run with
 
-    python3 'Blackboard url' [--hide]
+    python3 bb_interact.py 'Blackboard url' [--hide]
 
 Where the blackboard url should be placed between quotations.
 
 The optional --hide flag will run this script without opening an actual
 Chrome browser but will require you to enter your login details into the
 terminal rather than the secure login page directly.
-
 """
 
 import time
