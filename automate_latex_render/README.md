@@ -1,6 +1,6 @@
 # Web interfacing utility for Blackboard
 
-This script will provide a fast was to render LaTeX (actually MathML) code into
+This script will provide a fast way to render LaTeX (actually MathML) code into
 actual equations without needing to manually edit then save and submit the
 question again.
 ## Dependencies:
@@ -15,13 +15,9 @@ interactions.
 
 ## Usage:
 
-To run this script you will first need to have created a test in Blackboard.
-[Here](https://github.com/oscarbenjamin/txt2bb "Text file upload to Blackboard")
-is a repository that allows you to write the questions in a text document for
-efficient upload to Blackboard, alternatively, you can create the test within
-Blackboard.
+To run this script you will first need to have created a test in Blackboard using txt2bb.py
 
-Once the test is created, click its drop down menu and select 'edit test' which
+Once the test is created, find the test on Blackboard, click its drop down menu and select 'edit test' which
 will take you to the editing page in which the questions can be edited
 indivually. Copy the current url of this page to your clipboard.
 
