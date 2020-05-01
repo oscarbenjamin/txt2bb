@@ -24,7 +24,7 @@ indivually. Copy the current url of this page to your clipboard.
 The file can then be run with 
 
 ```
-python3 'Blackboard url' [--hide]
+python3 bb_interact.py 'Blackboard url' [--hide]
 ```
 
 Where the blackboard url should be placed between quotations.
