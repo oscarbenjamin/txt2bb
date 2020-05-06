@@ -24,7 +24,7 @@ indivually. Copy the current url of this page to your clipboard.
 The file can then be run with 
 
 ```
-python3 bb_interact.py 'Blackboard url' [--hide]
+python3 bb_interact.py 'Blackboard url' [--hide] [--randomise]
 ```
 
 Where the blackboard url should be placed between quotations.
@@ -33,3 +33,5 @@ The optional `--hide` flag will run this script without opening an actual
 Chrome browser but will require you to enter your login details into the
 terminal rather than the secure login page directly.
 
+The optional `--randomise` flag will check the box to randomise the order in
+which answers are displayed for the multi choice and multi answer questions
