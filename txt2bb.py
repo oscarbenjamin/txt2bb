@@ -45,7 +45,7 @@ appropriate (list) format for the specified file type.
 """
 import sys
 import re
-
+from itertools import chain
 
 #--------------------------------Question Classes---------------------------------#
 class Question:
@@ -211,7 +211,7 @@ class JUMBLED_SENTENCE(Question):
         var_list = []
         for ans in answers:
             # Check if variable(s) have been linked to the choice
-            if ':' in ans:
+            if re.search(r':.\w',ans):
                 choice, variables = map(str.strip,ans.split(':'))
                 # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',variables):
@@ -232,7 +232,8 @@ class JUMBLED_SENTENCE(Question):
         if not all(var in self.prompt for var in var_list):
             raise ValueError('missing variables from prompt')
         if not (self.prompt.count('[') == self.prompt.count(']') == len(var_list)):
-            raise ValueError('missing brackets in prompt')
+            raise ValueError("""incorrect number of brackets in prompt\n
+            ---Make sure "[" or "]" do not appear apart from around variables---\n""")
 
     def bb(self):
         items = [self.type, self.prompt]
@@ -258,6 +259,7 @@ class JUMBLED_SENTENCE(Question):
 
 
 class QUIZ_BOWL(Question):
+    # Ignored for now, most likely not needed
     def bb(self):
         pass
 
@@ -280,7 +282,32 @@ def main(mode, filename):
     """ $ ./txt2bb.py (--latex|--b) FILE """
 
     with open(filename) as infile:
-        questions = txt2py(infile)
+        raw_questions = txt2py(infile)
+                   
+    questions = []
+
+    for question in raw_questions:
+        flat_question = ''.join(chain.from_iterable(question.values()))
+        # Check if variants are included in the question
+        if re.search('%{', flat_question):
+            variants_dict, num_variants = variant_questions(question)
+            for i in range(num_variants):
+                # Create new question using the ith entries in variant lists
+                var_question = {}
+                questions.append(var_question)
+                for key, val in variants_dict.items():
+                    var_question[key] = question[key]
+                    to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
+                    for num, entry in enumerate(to_replace):
+                        # Correct for escaped ',' in variant list text
+                        variant = val[num][i].replace('\,',',')
+                        if type(var_question[key]) == list:
+                            var_question[key] = [item.replace(entry, variant) for item in question[key]]
+                        else:
+                            var_question[key] = var_question[key].replace(entry, variant)
+        else:
+            questions.append(question)
+
 
     if mode == "--latex":
         lines = q2latex(questions)
@@ -294,6 +321,23 @@ def main(mode, filename):
 
     return 0
 
+def variant_questions(question):
+    # Find all options encased by %{ }% 
+    #flat_question = ''.join(chain.from_iterable(question.values()))
+    variants_dict = {}
+    for key, val in question.items():
+        flat_val = ''.join(chain.from_iterable(val))
+        variants = re.findall(r'%{(.*?)}%', flat_val)
+        # Split list at ',' if not escaped with \
+        variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
+    # Check all options can be matched up (equal length option lists)
+    lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
+    if len(set(lens)) != 1:
+        raise ValueError("\n\n    All variants must be the same length\n")
+
+    return variants_dict, lens[0]
+
+
 
 def txt2py(infile):
     """Parse input text format into Python objects.
@@ -305,7 +349,9 @@ def txt2py(infile):
     # Inserting linebreak character for --bb case (<br>), this then 
     # functions as placeholder for --latex case (\\) 
     text = re.sub(' *\n> *','<br>',infile.read())
+    # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
+    # This flattens newlines that are escaped with '\'
     text = re.sub(r' *\\\n *',' ', text)
     lines = text.splitlines()
     
@@ -428,3 +474,4 @@ def latex_enumerate(items, latex_item_func):
 
 if __name__ == "__main__":
     sys.exit(main(*sys.argv[1:]))
+
