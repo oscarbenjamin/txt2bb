@@ -40,6 +40,39 @@ specify a valid type, and a prompt (the question). See the
 provided questions.txt file for examples. Explanations on how each question
 type is formatted can be found
 [here](https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf).
+### Multi Question Generating
+
+In order to generate multiple versions of the same question, the list of
+variants must be listed between `%{` and `}%`, separated by commas. These
+variants can be placed within both questions and answers but there must
+be the same number of variants in each list as they will be matched up when the
+multiple questions are generated. An example is shown below
+
+```
+type: MC
+prompt: What is the square root of %{16, 25, 36}%?
+correct: %{4, 5, 6}%
+incorrect: %{2, 6, 7}%
+incorrect: 3
+incorrect: 8
+```
+
+This will produce three similar questions, the first being:
+
+```
+type: MC
+prompt: What is the square root of 16?
+correct: 4
+incorrect: 2
+incorrect: 3
+incorrect: 8
+```
+
+Be careful that the variants labelled 'incorrect' will definitely be incorrect when
+matching up with the question variant if there is one. 
+
+If you wish to include a `,` in the option itself it should be written as `\,`
+to avoid the script thinking you are separating two variants.
 
 ### NOTES:
 
@@ -59,12 +92,16 @@ This is a line that you do not wish to break so must begin immediately with '\'.
 This will be written as a new line since it starts with a '>'
 ```
 
+New lines should always either be a new entry (such as the next answer), or escaped with `\`, or enforced
+with `>`.
+
 Examples of every question can be found in questions.txt.
 
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
 second colon and are separated by commas if multiple variables correspond to
-the choice. 
+the choice. **You cannot use `[` or `]` within this question type apart from to
+specify variables**
 
 For question types `ESS` and `SR` there is the option to add an example
 answer, preceded by `example: `. 
@@ -89,7 +126,7 @@ $ python txt2bb.py --latex questions.txt
 Which of these ODEs is linear?
 ... (continues)
 ```
-You can send that yo a file and compile it using
+You can send that to a file and compile it using
 ```
 $ python txt2bb.py --latex questions.txt > questions.tex
 $ pdflatex questions.tex
