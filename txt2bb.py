@@ -302,7 +302,7 @@ def main(mode, filename):
                         # Correct for escaped ',' in variant list text
                         variant = val[num][i].replace('\,',',')
                         if type(var_question[key]) == list:
-                            var_question[key] = [item.replace(entry, variant) for item in question[key]]
+                            var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
                         else:
                             var_question[key] = var_question[key].replace(entry, variant)
         else:
@@ -323,7 +323,6 @@ def main(mode, filename):
 
 def variant_questions(question):
     # Find all options encased by %{ }% 
-    #flat_question = ''.join(chain.from_iterable(question.values()))
     variants_dict = {}
     for key, val in question.items():
         flat_val = ''.join(chain.from_iterable(val))
