@@ -361,6 +361,8 @@ def txt2py(infile):
     # Inserting linebreak character for --bb case (<br>), this then 
     # functions as placeholder for --latex case (\\) 
     text = re.sub(' *\n> *','<br>',infile.read())
+    # Remove tabs to avoid confusing bb format
+    text = re.sub('\t', '', text)
     # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
     # This flattens newlines that are escaped with '\'
