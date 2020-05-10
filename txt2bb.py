@@ -279,36 +279,20 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
 def main(mode, filename):
-    """ $ ./txt2bb.py (--latex|--b) FILE """
+    """ $ ./txt2bb.py (--latex|--bb) FILE """
 
     with open(filename) as infile:
         raw_questions = txt2py(infile)
                    
+    half_processed = []
     questions = []
 
+    # Process both levels of variants in questions
     for question in raw_questions:
-        flat_question = ''.join(chain.from_iterable(question.values()))
-        # Check if variants are included in the question
-        if re.search('%{', flat_question):
-            variants_dict, num_variants = variant_questions(question)
-            for i in range(num_variants):
-                # Create new question using the ith entries in variant lists
-                var_question = {}
-                questions.append(var_question)
-                for key, val in variants_dict.items():
-                    var_question[key] = question[key]
-                    to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
-                    for num, entry in enumerate(to_replace):
-                        # Correct for escaped ',' in variant list text
-                        variant = val[num][i].replace('\,',',')
-                        if type(var_question[key]) == list:
-                            var_question[key] = [item.replace(entry, variant) for item in question[key]]
-                        else:
-                            var_question[key] = var_question[key].replace(entry, variant)
-        else:
-            questions.append(question)
-
-
+        half_processed += [q_var for q_var in variant_handler(question, 2)]
+    for question in half_processed:
+        questions += [q_var for q_var in variant_handler(question, 1)]
+    
     if mode == "--latex":
         lines = q2latex(questions)
     elif mode == "--bb":
@@ -321,15 +305,43 @@ def main(mode, filename):
 
     return 0
 
-def variant_questions(question):
+def variant_handler(question, level):
+    # Check if variants are included in the question
+    if re.search(f'(?<!%)%{{{level}}}{{', str(question)):
+        variants_dict, num_variants = extract_variants(question, level)
+        for i in range(num_variants):
+            # Create new question using the ith entries in variant lists
+            var_question = {}
+            for key, val in variants_dict.items():
+                var_question[key] = question[key]
+                to_replace = re.findall(f'(?<!%)%{{{level}}}{{.*?}}%{{{level}}}', str(question[key]))
+                for num, entry in enumerate(to_replace):
+                    # Correct for escaped ',' in variant list text
+                    variant = val[num][i].replace('\,',',')
+                    # Correct for doubly escaped '\' from findall
+                    entry = re.sub(r'\\\\',r'\\',entry)
+
+                    if type(var_question[key]) == list:
+                        var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
+                    else:
+                        var_question[key] = var_question[key].replace(entry, variant)
+            yield var_question
+    else:
+        yield question
+
+def extract_variants(question, level):
     # Find all options encased by %{ }% 
-    #flat_question = ''.join(chain.from_iterable(question.values()))
     variants_dict = {}
     for key, val in question.items():
-        flat_val = ''.join(chain.from_iterable(val))
-        variants = re.findall(r'%{(.*?)}%', flat_val)
+        #flat_val = ''.join(chain.from_iterable(val))
+        variants = []
+        if type(val) == list:
+            for val_item in val:
+                variants += re.findall(rf'(?<!%)%{{{level}}}{{(.*?)}}%{{{level}}}', val_item)
+        else:
+            variants += re.findall(rf'(?<!%)%{{{level}}}{{(.*?)}}%{{{level}}}', val)
         # Split list at ',' if not escaped with \
-        variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
+        variants_dict[key] = [re.split(rf' *(?<!\\),{{{level}}} *', item) for item in variants]
     # Check all options can be matched up (equal length option lists)
     lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
     if len(set(lens)) != 1:

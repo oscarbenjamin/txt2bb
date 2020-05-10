@@ -40,6 +40,7 @@ specify a valid type, and a prompt (the question). See the
 provided questions.txt file for examples. Explanations on how each question
 type is formatted can be found
 [here](https://www.csustan.edu/sites/default/files/blackboard/FacultyHelp/Documents/UploadingQuestions.pdf).
+
 ### Multi Question Generating
 
 In order to generate multiple versions of the same question, the list of
@@ -68,11 +69,25 @@ incorrect: 3
 incorrect: 8
 ```
 
-Be careful that the variants labelled 'incorrect' will definitely be incorrect when
+Be careful that the variants labelled 'correct' and 'incorrect' will definitely be accurate when
 matching up with the question variant if there is one. 
 
 If you wish to include a `,` in the option itself it should be written as `\,`
 to avoid the script thinking you are separating two variants.
+
+There is also support for a second tier of variant, these should be listed
+between `%%{` and `}%%`, separated by two commas. This will produce a greater
+range of variations. An example is shown below
+
+```
+type: MC
+prompt: What is %%{the square root of,, two times}%% %{16, 25, 36}%?
+correct: %%{%{4, 5, 6}%,, %{32, 50, 72}%}%%
+incorrect: %{2, 6, 7}%
+incorrect: 3
+incorrect: 8
+```
+This will produce six similar questions.
 
 ### NOTES:
 
