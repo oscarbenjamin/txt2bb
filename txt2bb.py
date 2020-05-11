@@ -211,7 +211,7 @@ class JUMBLED_SENTENCE(Question):
         var_list = []
         for ans in answers:
             # Check if variable(s) have been linked to the choice
-            if re.search(r':.\w',ans):
+            if re.search(r':.*\w',ans):
                 choice, variables = map(str.strip,ans.split(':'))
                 # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',variables):
