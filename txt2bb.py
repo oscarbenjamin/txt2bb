@@ -279,7 +279,7 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
 def main(mode, filename):
-    """ $ ./txt2bb.py (--latex|--b) FILE """
+    """ $ ./txt2bb.py (--latex|--bb) FILE """
 
     with open(filename) as infile:
         raw_questions = txt2py(infile)
@@ -287,9 +287,8 @@ def main(mode, filename):
     questions = []
 
     for question in raw_questions:
-        flat_question = ''.join(chain.from_iterable(question.values()))
         # Check if variants are included in the question
-        if re.search('%{', flat_question):
+        if re.search('%{', str(question)):
             variants_dict, num_variants = variant_questions(question)
             for i in range(num_variants):
                 # Create new question using the ith entries in variant lists
@@ -325,8 +324,7 @@ def variant_questions(question):
     # Find all options encased by %{ }% 
     variants_dict = {}
     for key, val in question.items():
-        flat_val = ''.join(chain.from_iterable(val))
-        variants = re.findall(r'%{(.*?)}%', flat_val)
+        variants = re.findall(r'%{(.*?)}%', str(val))
         # Split list at ',' if not escaped with \
         variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
     # Check all options can be matched up (equal length option lists)
@@ -348,6 +346,8 @@ def txt2py(infile):
     # Inserting linebreak character for --bb case (<br>), this then 
     # functions as placeholder for --latex case (\\) 
     text = re.sub(' *\n> *','<br>',infile.read())
+    # Remove tabs to avoid confusing bb format
+    text = re.sub('\t', '', text)
     # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
     # This flattens newlines that are escaped with '\'
