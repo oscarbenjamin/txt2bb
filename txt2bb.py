@@ -283,7 +283,7 @@ def main(mode, filename):
 
     with open(filename) as infile:
         raw_questions = txt2py(infile)
-
+    #print('raw qs',raw_questions)
     questions = []
 
     for question in raw_questions:
@@ -297,9 +297,13 @@ def main(mode, filename):
                 for key, val in variants_dict.items():
                     var_question[key] = question[key]
                     to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
+                    #print('---------------')
+                    #print(to_replace)
+                    #print('---------------')
                     for num, entry in enumerate(to_replace):
                         # Correct for escaped ',' in variant list text
                         variant = val[num][i].replace('\,',',')
+                        #variant = re.sub(r'\\\\\\\\(?!\n)',r'\\\\',variant)
                         if type(var_question[key]) == list:
                             var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
                         else:
@@ -324,14 +328,19 @@ def variant_questions(question):
     # Find all options encased by %{ }%
     variants_dict = {}
     for key, val in question.items():
-        variants = re.findall(r'%{(.*?)}%', str(val))
+        #print('============')
+        #print(val)
+        variants = re.findall(r'%{(.*?)}%', ''.join(chain.from_iterable(val)))
         # Split list at ',' if not escaped with \
         variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
+        #print('-------------')
+        #print(variants)
+        #print('=============')
     # Check all options can be matched up (equal length option lists)
     lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
     if len(set(lens)) != 1:
         raise ValueError("\n\n    All variants must be the same length\n")
-
+    #print(variants_dict)
     return variants_dict, lens[0]
 
 
