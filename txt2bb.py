@@ -50,7 +50,7 @@ from itertools import chain
 #--------------------------------Question Classes---------------------------------#
 class Question:
     """Defualt initialisation for all question handling classes
-    
+
     questions (dict) -> assigns generic values to object
     """
 
@@ -179,7 +179,7 @@ class NUM(Question):
                 self.tol = question['tolerance'][0]
         except:
             raise ValueError('answer and tolerance must be numbers')
-        
+
     def bb(self):
         if 'tolerance' in self.question.keys():
             return [self.type, self.prompt, self.ans, self.tol]
@@ -196,7 +196,7 @@ class NUM(Question):
 class SR(ESS):
     # Inherits functions form essay question class as they are identical
     pass
-        
+
 
 class OP(FIL):
     # Inherits functions form file upload question class as they are identical
@@ -211,7 +211,7 @@ class JUMBLED_SENTENCE(Question):
         var_list = []
         for ans in answers:
             # Check if variable(s) have been linked to the choice
-            if re.search(r':.\w',ans):
+            if re.search(r':.*\w',ans):
                 choice, variables = map(str.strip,ans.split(':'))
                 # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',variables):
@@ -266,7 +266,7 @@ class QUIZ_BOWL(Question):
     def latex(self):
         pass
 
-# Tuple of all classes for use in dictionary in txt2bb 
+# Tuple of all classes for use in dictionary in txt2bb
 q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, QUIZ_BOWL)
 
 
@@ -275,7 +275,7 @@ q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, QUI
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'QUIZ_BOWL')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
-        'tolerance', 'variable', 'q_word', 'q_phrase')        
+        'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
 def main(mode, filename):
@@ -283,16 +283,35 @@ def main(mode, filename):
 
     with open(filename) as infile:
         raw_questions = txt2py(infile)
-                   
-    half_processed = []
+    #print('raw qs',raw_questions)
     questions = []
 
-    # Process both levels of variants in questions
     for question in raw_questions:
-        half_processed += [q_var for q_var in variant_handler(question, 2)]
-    for question in half_processed:
-        questions += [q_var for q_var in variant_handler(question, 1)]
-    
+        # Check if variants are included in the question
+        if re.search('%{', str(question)):
+            variants_dict, num_variants = variant_questions(question)
+            for i in range(num_variants):
+                # Create new question using the ith entries in variant lists
+                var_question = {}
+                questions.append(var_question)
+                for key, val in variants_dict.items():
+                    var_question[key] = question[key]
+                    to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
+                    #print('---------------')
+                    #print(to_replace)
+                    #print('---------------')
+                    for num, entry in enumerate(to_replace):
+                        # Correct for escaped ',' in variant list text
+                        variant = val[num][i].replace('\,',',')
+                        #variant = re.sub(r'\\\\\\\\(?!\n)',r'\\\\',variant)
+                        if type(var_question[key]) == list:
+                            var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
+                        else:
+                            var_question[key] = var_question[key].replace(entry, variant)
+        else:
+            questions.append(question)
+
+
     if mode == "--latex":
         lines = q2latex(questions)
     elif mode == "--bb":
@@ -305,48 +324,23 @@ def main(mode, filename):
 
     return 0
 
-def variant_handler(question, level):
-    # Check if variants are included in the question
-    if re.search(f'(?<!%)%{{{level}}}{{', str(question)):
-        variants_dict, num_variants = extract_variants(question, level)
-        for i in range(num_variants):
-            # Create new question using the ith entries in variant lists
-            var_question = {}
-            for key, val in variants_dict.items():
-                var_question[key] = question[key]
-                to_replace = re.findall(f'(?<!%)%{{{level}}}{{.*?}}%{{{level}}}', str(question[key]))
-                for num, entry in enumerate(to_replace):
-                    # Correct for escaped ',' in variant list text
-                    variant = val[num][i].replace('\,',',')
-                    # Correct for doubly escaped '\' from findall
-                    entry = re.sub(r'\\\\',r'\\',entry)
-
-                    if type(var_question[key]) == list:
-                        var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
-                    else:
-                        var_question[key] = var_question[key].replace(entry, variant)
-            yield var_question
-    else:
-        yield question
-
-def extract_variants(question, level):
-    # Find all options encased by %{ }% 
+def variant_questions(question):
+    # Find all options encased by %{ }%
     variants_dict = {}
     for key, val in question.items():
-        #flat_val = ''.join(chain.from_iterable(val))
-        variants = []
-        if type(val) == list:
-            for val_item in val:
-                variants += re.findall(rf'(?<!%)%{{{level}}}{{(.*?)}}%{{{level}}}', val_item)
-        else:
-            variants += re.findall(rf'(?<!%)%{{{level}}}{{(.*?)}}%{{{level}}}', val)
+        #print('============')
+        #print(val)
+        variants = re.findall(r'%{(.*?)}%', ''.join(chain.from_iterable(val)))
         # Split list at ',' if not escaped with \
-        variants_dict[key] = [re.split(rf' *(?<!\\),{{{level}}} *', item) for item in variants]
+        variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
+        #print('-------------')
+        #print(variants)
+        #print('=============')
     # Check all options can be matched up (equal length option lists)
     lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
     if len(set(lens)) != 1:
         raise ValueError("\n\n    All variants must be the same length\n")
-
+    #print(variants_dict)
     return variants_dict, lens[0]
 
 
@@ -358,8 +352,8 @@ def txt2py(infile):
     """
 
     questions = []
-    # Inserting linebreak character for --bb case (<br>), this then 
-    # functions as placeholder for --latex case (\\) 
+    # Inserting linebreak character for --bb case (<br>), this then
+    # functions as placeholder for --latex case (\\)
     text = re.sub(' *\n> *','<br>',infile.read())
     # Remove tabs to avoid confusing bb format
     text = re.sub('\t', '', text)
@@ -368,7 +362,7 @@ def txt2py(infile):
     # This flattens newlines that are escaped with '\'
     text = re.sub(r' *\\\n *',' ', text)
     lines = text.splitlines()
-    
+
     for lineno, line in enumerate(lines, 1):
         # Skip comments or blank lines
         if not line or line.startswith('#'):
@@ -396,7 +390,7 @@ def txt2py(infile):
                     question[key].append(val)
             elif key in ('type', 'prompt'):
                 question[key] = val
-    
+
     return questions
 
 
@@ -459,7 +453,7 @@ def q2latex1(question):
 
     The result is a fragment of latex.
     """
-    
+
     yield question["prompt"].replace('<br>',r'\\\\')
     if question["type"] in Q_TYPES:
         handler = HANDLERS[question["type"]](question)
@@ -488,4 +482,5 @@ def latex_enumerate(items, latex_item_func):
 
 if __name__ == "__main__":
     sys.exit(main(*sys.argv[1:]))
+
 
