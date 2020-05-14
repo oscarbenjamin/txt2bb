@@ -75,20 +75,6 @@ matching up with the question variant if there is one.
 If you wish to include a `,` in the option itself it should be written as `\,`
 to avoid the script thinking you are separating two variants.
 
-There is also support for a second tier of variant, these should be listed
-between `%%{` and `}%%`, separated by two commas. This will produce a greater
-range of variations. An example is shown below
-
-```
-type: MC
-prompt: What is %%{the square root of,, two times}%% %{16, 25, 36}%?
-correct: %%{%{4, 5, 6}%,, %{32, 50, 72}%}%%
-incorrect: %{2, 6, 7}%
-incorrect: 3
-incorrect: 8
-```
-This will produce six similar questions.
-
 ### NOTES:
 
 If the question should contain a linebreak, start each new line with `>`. 
