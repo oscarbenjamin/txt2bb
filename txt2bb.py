@@ -258,22 +258,58 @@ class JUMBLED_SENTENCE(Question):
         return items
 
 
-class QUIZ_BOWL(Question):
-    # Ignored for now, most likely not needed
+class FIB_PLUS(Question):
+    # Fill in the blank (multiple blanks)
+    def __init__(self, question):
+        Question.__init__(self, question)
+        answers = self.question['answer']
+        self.mappings = {}
+        ans_list = []
+        for ans in answers:
+            # Check variable has been linked to the choice
+            if re.search(r':.*\w',ans):
+                variable, answers = map(str.strip,ans.split(':'))
+                # Check if multiple variables (separated by commas) are present
+                if re.search(r'(?<!\\),',answers):
+                    # Split at commas if not escaped with \
+                    ans = list(map(str.strip, answers.split(',')))
+                    ans_list += ans
+                else:
+                    # Otherwise save the single variable (removing any escape slashes)
+                    ans = answers.replace('\\','')
+                    ans_list.append(ans)
+
+                self.mappings[variable] = ans
+            else:
+                raise ValueError('Variable is not given answers')
     def bb(self):
-        pass
+        items = [self.type, self.prompt]
+        for var, ans in self.mappings.items():
+            items.append(var)
+            if type(ans) == list:
+                items += ans
+            else:
+                items.append(ans)
+            items.append('')
+        return items
 
     def latex(self):
-        pass
+        items = []
+        for var, ans in self.mappings.items():
+            if type(ans) == list:
+                items.append((var, ', '.join(ans)))
+            else:
+                items.append((var,str(ans)))
+        return items
 
 # Tuple of all classes for use in dictionary in txt2bb
-q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, QUIZ_BOWL)
+q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB_PLUS)
 
 
 #-----------------------------------File Handling-------------------------------------#
 
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
-        'JUMBLED_SENTENCE', 'QUIZ_BOWL')
+        'JUMBLED_SENTENCE', 'FIB_PLUS')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
