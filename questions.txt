@@ -109,3 +109,12 @@ answer: dot product : a
 answer: magnitude
 answer: parallel : e
 answer: perpendicular : c
+
+------------------ Question
+
+type: FIB_PLUS
+prompt: The [a] of $x^2$ is $\frac{1}{3}x^3$, if this process is performed from 1 to 3,\
+the answer (to 2dp)  would give [b].
+answer: a: integral
+answer: b: 8.66, 26/3
+
