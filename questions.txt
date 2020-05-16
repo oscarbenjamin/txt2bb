@@ -6,10 +6,10 @@
 
 type: MA
 prompt  :    Which of these ODEs is linear?
-correct: $\frac{dx}{dt} + x$
-correct: $\frac{dx}{dt} + \cos{t}$
-incorrect: $\frac{dx}{dt} + \cos{x}$
-incorrect: $\frac{dy}{dt} + y^2$
+correct: $$\frac{dx}{dt} + x$$
+correct: $$\frac{dx}{dt} + \cos{t}$$
+incorrect: $$\frac{dx}{dt} + \cos{x}$$
+incorrect: $$\frac{dy}{dt} + y^2$$
 
 ------------------ Question
 
@@ -37,7 +37,7 @@ prompt: Explain why the matrix, \
 $A = \begin{bmatrix}\
 1 & 2 & 3\\
 2 & 9 & 2\\
-4 & 8 & 12\end{bmatrix}$, will have an eigenvalue equal to 0.
+4 & 8 & 12\end{bmatrix},$ will have an eigenvalue equal to 0.
 example: The rank of this matrix is 2, meaning the nullspace has dimension 1.\
 The number of zero eigenvalues is directly linked to the dimensionality of the\
 nullspace as this describes how many eigenvectors will be reduced to the zero\
@@ -47,9 +47,9 @@ vector.
 
 type: ORD
 prompt: $X$ follows a continuous distribution and has probability density\
-function
->$\begin{array}{l}f_X(x) = \frac{1}{2}x, \quad 0 \leq X \leq 2\\
-\quad\quad \quad = 0, \quad \mathrm{elsewhere.}\end{array}$
+function \
+$$ f_X(x) = \frac{1}{2}x, \quad 0 \leq X \leq 2 \\
+\quad \quad  = 0, \quad \mathrm{elsewhere.}$$
 >Number the following probability measures from 1 to 3, with 1 being the largest.
 answer: The mode of $X$
 answer: The median of $X$
