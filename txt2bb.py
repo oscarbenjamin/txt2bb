@@ -307,6 +307,24 @@ q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB
 
 
 #-----------------------------------File Handling-------------------------------------#
+# HTML to initialise MathJax environment in each question page
+MATHJAX = """<script type="text/x-mathjax-config">\
+MathJax.Hub.Config({\
+tex2jax: {displayMath: [['$$','$$'], ['\\\\[','\\\\]']],\
+inlineMath: [['$','$'], ['\\\\(','\\\\)']]},\
+"HTML-CSS": { scale: 120},\
+displayAlign: "left"\
+});</script>\
+<script type="text/javascript"\
+src="https://www.hostmath.com/Math/MathJax.js?config=OK"></script>"""
+
+# Cut down version to work for JUMBLED_SENTENCE and FIB_PLUS which can't include [ ]
+MATHJAX_JS = """<script type="text/x-mathjax-config">\
+  MathJax.Hub.Config({\
+    "HTML-CSS": { scale: 120}});\
+</script>\
+<script type="text/javascript"\
+src="https://www.hostmath.com/Math/MathJax.js?config=OK"></script>"""
 
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'FIB_PLUS')
@@ -319,7 +337,7 @@ def main(mode, filename):
 
     with open(filename) as infile:
         raw_questions = txt2py(infile)
-    #print('raw qs',raw_questions)
+    
     questions = []
 
     for question in raw_questions:
@@ -333,13 +351,9 @@ def main(mode, filename):
                 for key, val in variants_dict.items():
                     var_question[key] = question[key]
                     to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
-                    #print('---------------')
-                    #print(to_replace)
-                    #print('---------------')
                     for num, entry in enumerate(to_replace):
                         # Correct for escaped ',' in variant list text
                         variant = val[num][i].replace('\,',',')
-                        #variant = re.sub(r'\\\\\\\\(?!\n)',r'\\\\',variant)
                         if type(var_question[key]) == list:
                             var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
                         else:
@@ -364,21 +378,15 @@ def variant_questions(question):
     # Find all options encased by %{ }%
     variants_dict = {}
     for key, val in question.items():
-        #print('============')
-        #print(val)
         variants = re.findall(r'%{(.*?)}%', ''.join(chain.from_iterable(val)))
         # Split list at ',' if not escaped with \
         variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
-        #print('-------------')
-        #print(variants)
-        #print('=============')
     # Check all options can be matched up (equal length option lists)
     lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
     if len(set(lens)) != 1:
         raise ValueError("\n\n    All variants must be the same length\n")
-    #print(variants_dict)
-    return variants_dict, lens[0]
 
+    return variants_dict, lens[0]
 
 
 def txt2py(infile):
@@ -446,9 +454,16 @@ def q2bb1(question):
     else:
         raise ValueError("Unrecognised question type")
     items = handler.bb()
+    # Instert MathJax HTML code into the start of each prompt
+    if question['type'] in ['JUMBLED_SENTENCE','FIB_PLUS']:
+        items[1] = MATHJAX_JS+items[1]
+        # Switching $ and $$ to inline equation delimiter: \( \)
+        for i in range(len(items)):
+            items[i] = re.sub(r'\$+([^$]*)\$+', r'\(\1\)', items[i])
+    else:
+        items[1] = MATHJAX+items[1]
     # Output must be tab-delimited
-    # Need double-$ in Blackboard
-    return "\t".join(items).replace("$", "$$")
+    return "\t".join(items)
 
 
 LATEX_START = r"""
