@@ -495,6 +495,7 @@ def q2latex(questions):
 def latex_item(item):
     # Replaces line break symbol <br> from txt2py() and returns latex formatted line
     item = (item[0],item[1].replace('<br>',r'\\'))
+    item = (item[0],item[1].replace('$$',r'$'))
     return [r"\emph{%s}: %s" % item]
 
 def q2latex1(question):
