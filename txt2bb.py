@@ -59,7 +59,6 @@ class Question:
         self.type = question['type']
         self.prompt = question['prompt']
 
-
 class MC(Question):
     def __init__(self, question):
         Question.__init__(self, question)
@@ -223,7 +222,7 @@ class JUMBLED_SENTENCE(Question):
                     var = variables.replace('\\','')
                     var_list.append(var)
             else:
-                choice, var = ans, None
+                choice, var = ans.strip(':'), None
 
             self.mappings[choice] = var
 
@@ -307,25 +306,6 @@ q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB
 
 
 #-----------------------------------File Handling-------------------------------------#
-# HTML to initialise MathJax environment in each question page
-MATHJAX = """<script type="text/x-mathjax-config">\
-MathJax.Hub.Config({\
-tex2jax: {displayMath: [['$$','$$'], ['\\\\[','\\\\]']],\
-inlineMath: [['$','$'], ['\\\\(','\\\\)']]},\
-"HTML-CSS": { scale: 120},\
-displayAlign: "left"\
-});</script>\
-<script type="text/javascript"\
-src="https://www.hostmath.com/Math/MathJax.js?config=OK"></script>"""
-
-# Cut down version to work for JUMBLED_SENTENCE and FIB_PLUS which can't include [ ]
-MATHJAX_JS = """<script type="text/x-mathjax-config">\
-  MathJax.Hub.Config({\
-    "HTML-CSS": { scale: 120}});\
-</script>\
-<script type="text/javascript"\
-src="https://www.hostmath.com/Math/MathJax.js?config=OK"></script>"""
-
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'FIB_PLUS')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
@@ -399,12 +379,25 @@ def txt2py(infile):
     # Inserting linebreak character for --bb case (<br>), this then
     # functions as placeholder for --latex case (\\)
     text = re.sub(' *\n> *','<br>',infile.read())
+    # Mathjax cannot have > or < next to a letter (space needed) ignore <br>
+    text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
     # Remove tabs to avoid confusing bb format
     text = re.sub('\t', '', text)
     # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
     # This flattens newlines that are escaped with '\'
     text = re.sub(r' *\\\n *',' ', text)
+    # Replace all space in equations with {} to avoid Blackboard messing up
+    # Replace all space within \text or \mathrm with ', instead of {}
+    text = text.replace('\\text{','\\mathrm{')
+    eq_texts = re.findall(r'\\mathrm({.*?})', text)
+    for eq_text in eq_texts:
+        text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
+
+    eqs = re.findall('\$+([^\$]+?)\$+' , text)
+    for eq in eqs:
+        text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','',eq))
+        
     lines = text.splitlines()
 
     for lineno, line in enumerate(lines, 1):
@@ -454,21 +447,17 @@ def q2bb1(question):
     else:
         raise ValueError("Unrecognised question type")
     items = handler.bb()
-    # Instert MathJax HTML code into the start of each prompt
-    if question['type'] in ['JUMBLED_SENTENCE','FIB_PLUS']:
-        items[1] = MATHJAX_JS+items[1]
-        # Switching $ and $$ to inline equation delimiter: \( \)
-        for i in range(len(items)):
-            items[i] = re.sub(r'\$+([^$]*)\$+', r'\(\1\)', items[i])
-    else:
-        items[1] = MATHJAX+items[1]
-    # Output must be tab-delimited
-    return "\t".join(items)
+    # Add Separating new line after question to avoid overcrowded look
+    items[1]+='<p></p>'
+    # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
+    # display math mode so these are changed to the MathJax configured one
+    return "\t".join(items).replace("$$","~~")
 
 
 LATEX_START = r"""
 \documentclass{article}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \begin{document}
 """
 
@@ -495,8 +484,10 @@ def q2latex(questions):
 def latex_item(item):
     # Replaces line break symbol <br> from txt2py() and returns latex formatted line
     item = (item[0],item[1].replace('<br>',r'\\'))
-    if item[0] not in ['type','prompt']:
-        item = (item[0],item[1].replace('$$',r'$'))
+    # Escape any % that aren't already as they comment out the line in Latex
+    item = (item[0],re.sub(r'(?<!\\)%','\\%', item[1]))
+    # Prevent answer lines from showing up in display mode
+    item = (item[0],item[1].replace('$$',r'$'))
     return [r"\emph{%s}: %s" % item]
 
 def q2latex1(question):
@@ -506,8 +497,11 @@ def q2latex1(question):
 
     The result is a fragment of latex.
     """
-
-    yield question["prompt"].replace('<br>',r'\\\\')
+    # Replaces line break symbol <br> from txt2py() and returns latex formatted line
+    prompt = question["prompt"].replace('<br>',r'\\\\')
+    # Escape any % that aren't already as they comment out the line in Latex
+    prompt = re.sub(r'(?<!\\)%','\\%', prompt)
+    yield prompt
     if question["type"] in Q_TYPES:
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
