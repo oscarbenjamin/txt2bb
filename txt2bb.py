@@ -380,7 +380,7 @@ def txt2py(infile):
     # functions as placeholder for --latex case (\\)
     text = re.sub(' *\n> *','<br>',infile.read())
     # Mathjax cannot have > or < next to a letter (space needed) ignore <br>
-    #text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
+    text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
     # Remove tabs to avoid confusing bb format
     text = re.sub('\t', '', text)
     # This appears when using bmatrix etc. and should be flattened
