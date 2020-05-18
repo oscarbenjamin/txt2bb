@@ -1,0 +1,7 @@
+<p>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({  tex2jax: {displayMath: [["~~","~~"],["\\[","\\]"]], inlineMath: [["$","$"],["\\(","\\)"]] },  "HTML-CSS": {    scale: 120},
+displayAlign: "left" });
+</script>
+<script type="text/javascript" src="https://www.hostmath.com/Math/MathJax.js?config=OK"></script>
+</p>
