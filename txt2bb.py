@@ -405,7 +405,7 @@ def txt2py(infile):
 
     eqs = re.findall('\$+([^\$]+?)\$+', text)
     for eq in eqs:
-        text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','',eq))
+        text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','\\,',eq))
         
     lines = text.splitlines()
 
