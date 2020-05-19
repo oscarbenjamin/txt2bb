@@ -310,9 +310,9 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(mode, filename):
-    """ $ ./txt2bb.py (--latex|--bb) FILE """
-
+def main(mode, filename, random='no'):
+    """ $ ./txt2bb.py (--latex|--bb) FILE [--randomise]"""
+   
     with open(filename) as infile:
         raw_questions = txt2py(infile)
     
@@ -338,6 +338,14 @@ def main(mode, filename):
                             var_question[key] = var_question[key].replace(entry, variant)
         else:
             questions.append(question)
+    
+    # Randomise applicable questions if specified
+    random = True if random.lower() in ['--r','--randomise'] else False
+    if random:
+        import random
+        for question in questions:
+            if question['type'] in ['MA','MC']:
+                random.shuffle(question['answers'])
 
 
     if mode == "--latex":
@@ -421,11 +429,11 @@ def txt2py(infile):
                 msg = "Line %s: Unrecognised key %s" % (lineno, key)
                 raise ValueError(msg)
 
-            # some keys can be repeated so collect valuse in a list
             if key in IN_TYPES:
                 question['answers'].append((key,val))
             else:
                 question[key] = val
+    
     return questions
 
 

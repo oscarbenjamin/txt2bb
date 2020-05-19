@@ -140,6 +140,16 @@ format:
 $ python txt2bb.py --bb questions.txt > questions_bb.txt
 ```
 
+The order that answers are given is preserved in this script. If you wish for
+Multiple choice and Multiple answer type questions to have their answers
+randomised automatically, this can be specified with the additional flag
+`--randomise`. An example of how this would look when producing the blackboard
+format question file is:
+```
+$ python txt2bb.py --bb questions.txt --randomise > questions_bb.txt
+```
+
+
 Note
 ----
 
