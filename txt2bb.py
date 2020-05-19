@@ -58,25 +58,26 @@ class Question:
         self.question = question
         self.type = question['type']
         self.prompt = question['prompt']
+        self.answers = question['answers']
 
 class MC(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        if len(question['correct'])!=1:
+        correct_occur = re.findall("'correct'",str(self.answers))
+
+        if len(correct_occur) != 1:
             raise ValueError("Only 1 correct answer should be provided")
 
     def bb(self):
         items = [self.type, self.prompt]
-        for correct in ("correct", "incorrect"):
-            for ans in self.question[correct]:
+        for correct, ans in self.answers:
                 items.append(ans)
                 items.append(correct)
         return items
 
     def latex(self):
         items = []
-        for correct in ("correct", "incorrect"):
-            for ans in self.question[correct]:
+        for correct, ans in self.answers:
                 items.append((correct, ans))
         return items
 
@@ -84,16 +85,14 @@ class MC(Question):
 class MA(Question):
     def bb(self):
         items = [self.type, self.prompt]
-        for correct in ("correct", "incorrect"):
-            for ans in self.question[correct]:
+        for correct, ans in self.answers:
                 items.append(ans)
                 items.append(correct)
         return items
 
     def latex(self):
         items = []
-        for correct in ("correct", "incorrect"):
-            for ans in self.question[correct]:
+        for correct, ans in self.answers:
                 items.append((correct, ans))
         return items
 
@@ -101,28 +100,29 @@ class MA(Question):
 class TF(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        if len(question['answer'])!=1:
+        ans_occur = re.findall("'answer'",str(self.answers))
+        if len(ans_occur) != 1:
             raise ValueError("Only 1 answer should be provided")
-        if question['answer'][0] not in ('true','false'):
+        if self.answers[0][1] not in ('true','false'):
             raise ValueError("valid answers are true or false")
 
     def bb(self):
-        return [self.type, self.prompt, self.question['answer'][0]]
+        return [self.type, self.prompt, self.answers[0][1]]
 
     def latex(self):
-        return [('answer', self.question['answer'][0])]
+        return [('answer', self.answers[0][1])]
 
 
 class ESS(Question):
     def bb(self):
-        if 'example' in self.question.keys():
-            return [self.type, self.prompt, self.question['example'][0]]
+        if self.answers:
+            return [self.type, self.prompt, self.answers[0][1]]
         else:
             return [self.type, self.prompt]
 
     def latex(self):
-        if 'example' in self.question.keys():
-            return [('example', self.question['example'][0])]
+        if self.answers:
+            return [('example', self.answers[0][1])]
         else:
             return None
 
@@ -130,32 +130,32 @@ class ESS(Question):
 class ORD(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        if not 1 <= len(question['answer']) <= 20:
+        if not 1 <= len(self.answers) <= 20:
             raise AssertionError("number of answers must be between 1 and 20")
 
     def bb(self):
-        return [self.type, self.prompt, *self.question['answer']]
+        return [self.type, self.prompt]+[ans for _,ans in self.answers]
 
     def latex(self):
-        items = [(num, ans) for num, ans in enumerate(self.question['answer'],1)]
+        items = [(num, ans[1]) for num, ans in enumerate(self.answers, 1)]
         return items
 
 
 class MAT(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        if len(question['match_a']) != len(question['match_b']):
+        mata = re.findall('match_a', str(self.answers))
+        matb = re.findall('match_b', str(self.answers))
+        if len(mata) != len(matb):
             raise AssertionError("All options must have matching answers")
-        a, b = question['match_a'], question['match_b']
-        self.merged_pairs = [sub[item] for item in range(len(b)) for sub in [a, b]]
 
     def bb(self):
-        return [self.type, self.prompt, *self.merged_pairs]
+        return [self.type, self.prompt]+[val for _,val in self.answers]
 
     def latex(self):
         letter = ('a','b')
-        items = [(str(num//2)+letter[num%2], ans) for num, ans in
-                zip(range(2,len(self.merged_pairs)+2), self.merged_pairs)]
+        items = [(str(num//2)+letter[num%2], ans[1]) for num, ans in
+                zip(range(2,len(self.answers)+2), self.answers)]
         return items
 
 
@@ -171,22 +171,20 @@ class NUM(Question):
     def __init__(self, question):
         Question.__init__(self, question)
         try:
-            float(question['answer'][0])
-            self.ans = question['answer'][0]
-            if 'tolerance' in question.keys():
-                float(question['tolerance'][0])
-                self.tol = question['tolerance'][0]
+            self.ans = str(float(self.answers[0][1]))
+            if 'tolerance' in str(self.answers):
+                self.tol = str(float(self.answers[1][1]))
         except:
             raise ValueError('answer and tolerance must be numbers')
 
     def bb(self):
-        if 'tolerance' in self.question.keys():
+        if 'tolerance' in str(self.answers):
             return [self.type, self.prompt, self.ans, self.tol]
         else:
             return [self.type, self.prompt, self.ans]
 
     def latex(self):
-        if 'tolerance' in self.question.keys():
+        if 'tolerance' in str(self.answers):
             return [('answer', self.ans), ('tolerance', r'$\pm$'+self.tol)]
         else:
             return [('answer', self.ans)]
@@ -205,9 +203,9 @@ class OP(FIL):
 class JUMBLED_SENTENCE(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        answers = self.question['answer']
         self.mappings = {}
         var_list = []
+        answers = [ans for _,ans in self.answers]
         for ans in answers:
             # Check if variable(s) have been linked to the choice
             if re.search(r':.*\w',ans):
@@ -261,7 +259,7 @@ class FIB_PLUS(Question):
     # Fill in the blank (multiple blanks)
     def __init__(self, question):
         Question.__init__(self, question)
-        answers = self.question['answer']
+        answers = [ans for _,ans in self.answers]
         self.mappings = {}
         ans_list = []
         for ans in answers:
@@ -312,9 +310,9 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(mode, filename):
-    """ $ ./txt2bb.py (--latex|--bb) FILE """
-
+def main(mode, filename, random='no'):
+    """ $ ./txt2bb.py (--latex|--bb) FILE [--randomise]"""
+   
     with open(filename) as infile:
         raw_questions = txt2py(infile)
     
@@ -340,6 +338,14 @@ def main(mode, filename):
                             var_question[key] = var_question[key].replace(entry, variant)
         else:
             questions.append(question)
+    
+    # Randomise applicable questions if specified
+    random = True if random.lower() in ['--r','--randomise'] else False
+    if random:
+        import random
+        for question in questions:
+            if question['type'] in ['MA','MC']:
+                random.shuffle(question['answers'])
 
 
     if mode == "--latex":
@@ -388,15 +394,22 @@ def txt2py(infile):
     # This flattens newlines that are escaped with '\'
     text = re.sub(r' *\\\n *',' ', text)
     # Replace all space in equations with {} to avoid Blackboard messing up
-    # Replace all space within \text or \mathrm with ', instead of {}
+    # Replace all space within \text or \mathrm with \', instead of {}
     text = text.replace('\\text{','\\mathrm{')
     eq_texts = re.findall(r'\\mathrm({.*?})', text)
     for eq_text in eq_texts:
         text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
 
-    eqs = re.findall('\$+([^\$]+?)\$+' , text)
+    # Cannot have space after \left or \right as {} will be inserted after
+    text = re.sub(r'(\\left|\\right) +',r'\1', text)
+    # Should not have spaces between commands such as \begin{array} {l} or {l} \hline
+    text = re.sub(r'} +{', r'}{', text)
+    text = re.sub(r'} +\\', r'}\\', text)
+    text = re.sub(r'(\\\w*) +\\', r'\1\\', text)
+
+    eqs = re.findall('\$+([^\$]+?)\$+', text)
     for eq in eqs:
-        text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','',eq))
+        text = text.replace(eq,re.sub(' ','{}',eq))
         
     lines = text.splitlines()
 
@@ -408,6 +421,7 @@ def txt2py(infile):
         # Start of a new question
         elif line.startswith("-------"):
             question = {}
+            question['answers'] = []
             questions.append(question)
 
         # key : val
@@ -419,15 +433,11 @@ def txt2py(infile):
                 msg = "Line %s: Unrecognised key %s" % (lineno, key)
                 raise ValueError(msg)
 
-            # some keys can be repeated so collect valuse in a list
             if key in IN_TYPES:
-                if key not in question:
-                    question[key] = [val]
-                else:
-                    question[key].append(val)
-            elif key in ('type', 'prompt'):
+                question['answers'].append((key,val))
+            else:
                 question[key] = val
-
+    
     return questions
 
 
