@@ -402,10 +402,14 @@ def txt2py(infile):
 
     # Cannot have space after \left or \right as {} will be inserted after
     text = re.sub(r'(\\left|\\right) +',r'\1', text)
+    # Should not have spaces between commands such as \begin{array} {l} or {l} \hline
+    text = re.sub(r'} +{', r'}{', text)
+    text = re.sub(r'} +\\', r'}\\', text)
+    text = re.sub(r'(\\\w*) +\\', r'\1\\', text)
 
     eqs = re.findall('\$+([^\$]+?)\$+', text)
     for eq in eqs:
-        text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','\\,',eq))
+        text = text.replace(eq,re.sub(' ','{}',eq))
         
     lines = text.splitlines()
 
