@@ -388,13 +388,16 @@ def txt2py(infile):
     # This flattens newlines that are escaped with '\'
     text = re.sub(r' *\\\n *',' ', text)
     # Replace all space in equations with {} to avoid Blackboard messing up
-    # Replace all space within \text or \mathrm with ', instead of {}
+    # Replace all space within \text or \mathrm with \', instead of {}
     text = text.replace('\\text{','\\mathrm{')
     eq_texts = re.findall(r'\\mathrm({.*?})', text)
     for eq_text in eq_texts:
         text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
 
-    eqs = re.findall('\$+([^\$]+?)\$+' , text)
+    # Cannot have space after \left or \right as {} will be inserted after
+    text = re.sub(r'(\\left|\\right) +',r'\1', text)
+
+    eqs = re.findall('\$+([^\$]+?)\$+', text)
     for eq in eqs:
         text = text.replace(eq,re.sub(' ','{}',eq)) if 'array' not in eq else text.replace(eq,re.sub(' ','',eq))
         
