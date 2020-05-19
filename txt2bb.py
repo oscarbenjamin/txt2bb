@@ -405,7 +405,7 @@ def txt2py(infile):
     # Should not have spaces between commands such as \begin{array} {l} or {l} \hline
     text = re.sub(r'} +{', r'}{', text)
     text = re.sub(r'} +\\', r'}\\', text)
-    text = re.sub(r'(\\\w*) +\\', r'\1\\', text)
+    text = re.sub(r'(\\\w*)? +\\', r'\1\\', text)
 
     eqs = re.findall('\$+([^\$]+?)\$+', text)
     for eq in eqs:
