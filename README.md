@@ -116,8 +116,20 @@ Usage
 -----
 
 Once you have your questions written up you can then convert them either to
-latex format to view locally or to Blackboards tab-delimited format. You can
-see the latex format with
+latex format to view locally or to Blackboards tab-delimited format, or produce
+both along with the compiled latex pdf. To produce all documents at once you
+would run
+
+```
+$ python txt2bb.py --all questions.txt
+```
+which will produce three key files:
+* `questions.tex`
+* `questions.pdf`
+* `questions_bb.txt`
+
+If you wish to produce just the latex format you can run
+
 ```
 $ python txt2bb.py --latex questions.txt
 \documentclass{article}
@@ -143,8 +155,14 @@ $ python txt2bb.py --bb questions.txt > questions_bb.txt
 The order that answers are given is preserved in this script. If you wish for
 Multiple choice and Multiple answer type questions to have their answers
 randomised automatically, this can be specified with the additional flag
-`--randomise`. An example of how this would look when producing the blackboard
-format question file is:
+`--randomise`. An example of how this would look when producing both Latex and
+blackboard files is
+
+```
+$ python txt2bb.py --all questions.txt --randomise
+```
+
+or for just a blackboard format file you would run
 ```
 $ python txt2bb.py --bb questions.txt --randomise > questions_bb.txt
 ```
