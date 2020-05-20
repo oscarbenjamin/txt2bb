@@ -172,18 +172,11 @@ Note
 ----
 
 You can now upload questions_bb.txt to Blackboard as a test or question pool
-using the "Upload questions" button. The latex embedded with double dollar
-e.g. `$$y = x^2$$` in questions_bb.txt will not automatically render when
-uploaded as rendering latex is a feature of the web editor. This means that
-after uploading you have to edit each question and then save without changing
-anything to trigger the latex rendering (maybe there is a better way...).
-[This help
-page](https://blackboard.secure.force.com/publickbarticleview?id=kA339000000L6QH)
-from blackboard seems to suggest there is not another way.
-However, there may be a workaround by rendering offline and uploading a raw XML
-format file. This needs to be looked into still.
+using the "Upload questions" button. The blackboard format text file will have
+been compiled to run alongside MathJax. The HTML code within the file
+MathJax.txt should be pasted into the 'Instructions' box of any test you are
+producing with this script. When presented with the 'Instructions' box, click
+the 'HTML' botton in the toolbar and paste the code into there then click
+update. Once this is submitted the equations should render correctly withint
+the browser.
 
-Also, there is a limit to the latex commands that can be passed to Blackboard.
-A full list is available
-[here](http://www.wiris.net/client/editor/docs/latex-coverage/).
-Importantly, this does not include certain amsmath commands such as `\begin{align}`. Perhaps a workaround can be found.
