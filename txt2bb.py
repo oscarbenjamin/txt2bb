@@ -310,10 +310,9 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(mode, filename, random='no'):
-    """ $ ./txt2bb.py (--latex|--bb) FILE [--randomise]"""
+def main(out_format, random, in_file, out_file=None):
    
-    with open(filename) as infile:
+    with open(in_file) as infile:
         raw_questions = txt2py(infile)
     
     questions = []
@@ -340,7 +339,6 @@ def main(mode, filename, random='no'):
             questions.append(question)
     
     # Randomise applicable questions if specified
-    random = True if random.lower() in ['--r','--randomise'] else False
     if random:
         import random
         for question in questions:
@@ -348,15 +346,17 @@ def main(mode, filename, random='no'):
                 random.shuffle(question['answers'])
 
 
-    if mode == "--latex":
+    if out_format == "--latex":
         lines = q2latex(questions)
-    elif mode == "--bb":
+    elif out_format == "--bb":
         lines = q2bb(questions)
+    if out_file: 
+        with open(out_file,'w') as out:
+            for line in lines:
+                print(line, file=out)
     else:
-        raise ValueError("Bad mode %r" % mode)
-
-    for line in lines:
-        print(line)
+        for line in lines:
+            print(line)
 
     return 0
 
@@ -536,8 +536,39 @@ def latex_enumerate(items, latex_item_func):
         yield from latex_item_func(item)
     yield ENUM_END
 
+def make_outfiles(out_format, random, in_files):
+    if out_format == '--bb':
+        for f in in_files:
+            main(out_format, random, f, f.strip('.txt')+'_bb.txt')
+    
+    elif out_format == '--latex':
+        for f in in_files:
+            main(out_format, random, f, f.strip('.txt')+'.tex')
+    else:
+        import subprocess
+        for f in in_files:
+            main('--bb', random, f, f.strip('.txt')+'_bb.txt')
+            main('--latex', random, f, f.strip('.txt')+'.tex')
+            subprocess.run(['pdflatex',f.strip('.txt')+'.tex'])
 
 if __name__ == "__main__":
-    sys.exit(main(*sys.argv[1:]))
+    out_format = sys.argv[1]
+    if out_format not in ['--bb','--latex','--all']:
+        raise ValueError('\n---Out format must be --bb,--latex, or --all---\n')
+
+    random = True if sys.argv[2]=='--randomise' else False
+    in_files = sys.argv[3:] if random else sys.argv[2:]
+    
+    # If no target file is specified, create them
+    if sys.stdout.isatty():
+        for f in in_files:
+            make_outfiles(out_format, random, in_files)
+    
+    # If one is specified, assume only one in_file is used
+    else:
+        if out_format not in ['--bb','--latex']:
+            raise ValueError('\n---Directed output should only be used for --bb or --latex flags---\n')
+
+        main(out_format, random, in_files[0])
 
 

@@ -114,58 +114,67 @@ For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 
 Usage
 -----
+```
+$ python txt2bb.py (--latex | --bb | --all) [--randomise] in_file.txt [,in_file2.txt, ...]
+```
 
-Once you have your questions written up you can then convert them either to
-latex format to view locally or to Blackboards tab-delimited format. You can
-see the latex format with
+Once you have your questions written up, you can convert them either to
+latex format to view locally or to Blackboards tab-delimited format, or produce
+both along with the compiled latex pdf. To produce all documents at once you
+would run
+
+```
+$ python txt2bb.py --all questions.txt
+```
+which will produce three key files:
+* `questions.tex`
+* `questions.pdf`
+* `questions_bb.txt`
+
+If you wish to produce just the Latex format you can run
+
 ```
 $ python txt2bb.py --latex questions.txt
-\documentclass{article}
-\begin{document}
-\begin{enumerate}
-\item
-Which of these ODEs is linear?
-... (continues)
 ```
-You can send that to a file and compile it using
+which will produce `questions.tex`.
+
+You can then compile that file using 
 ```
-$ python txt2bb.py --latex questions.txt > questions.tex
+$ python txt2bb.py --latex questions.txt
 $ pdflatex questions.tex
 ```
 That will give you a questions.pdf that you can use to look at the questions.
 
-When you are ready to upload your questions you can convert them to Blackboard
-format:
+You can also produce just the Blackboard format with
 ```
-$ python txt2bb.py --bb questions.txt > questions_bb.txt
+$ python txt2bb.py --bb questions.txt
 ```
+which will produce questions_bb.txt. This is then ready to upload to
+Blackboard.
+
+Multiple question files at once can be parsed, a corresponding file for each
+input file will be produced in whichever format, or if `--all` is specified
+then all three file types will be produced for each input file.
 
 The order that answers are given is preserved in this script. If you wish for
 Multiple choice and Multiple answer type questions to have their answers
 randomised automatically, this can be specified with the additional flag
-`--randomise`. An example of how this would look when producing the blackboard
-format question file is:
-```
-$ python txt2bb.py --bb questions.txt --randomise > questions_bb.txt
-```
+`--randomise`. An example of how this would look when producing both Latex and
+blackboard files is
 
+```
+$ python txt2bb.py --all --randomise questions.txt
+```
 
 Note
 ----
 
 You can now upload questions_bb.txt to Blackboard as a test or question pool
-using the "Upload questions" button. The latex embedded with double dollar
-e.g. `$$y = x^2$$` in questions_bb.txt will not automatically render when
-uploaded as rendering latex is a feature of the web editor. This means that
-after uploading you have to edit each question and then save without changing
-anything to trigger the latex rendering (maybe there is a better way...).
-[This help
-page](https://blackboard.secure.force.com/publickbarticleview?id=kA339000000L6QH)
-from blackboard seems to suggest there is not another way.
-However, there may be a workaround by rendering offline and uploading a raw XML
-format file. This needs to be looked into still.
+using the "Upload questions" button. The blackboard format text file will have
+been compiled to run alongside MathJax. The HTML code within the file
+MathJax.txt should be pasted into the 'Instructions' box of any test you are
+producing with this script. When presented with the 'Instructions' box, click
+the 'HTML' button in the toolbar and paste the code into there then click
+update. Once this is submitted the equations should render correctly within
+the browser.
 
-Also, there is a limit to the latex commands that can be passed to Blackboard.
-A full list is available
-[here](http://www.wiris.net/client/editor/docs/latex-coverage/).
-Importantly, this does not include certain amsmath commands such as `\begin{align}`. Perhaps a workaround can be found.
