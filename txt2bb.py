@@ -536,8 +536,19 @@ def latex_enumerate(items, latex_item_func):
         yield from latex_item_func(item)
     yield ENUM_END
 
+def run_subprocess(args):
+    import subprocess
+    file_name = re.search(r"([^']+).txt", str(args)).group(1)
+    randomise = '--r' if re.search(r"--r", str(args)) else ''
+    subprocess.run('./txt2bb.py --latex {0}.txt {1} > {0}.tex'.format(file_name, randomise), shell=True)
+    subprocess.run('./txt2bb.py --bb {0}.txt {1} > {0}_bb.txt'.format(file_name, randomise), shell=True)
+    subprocess.run('pdflatex {0}.tex'.format(file_name), shell=True)
+    sys.exit(0)
 
 if __name__ == "__main__":
-    sys.exit(main(*sys.argv[1:]))
+    if '--all' in sys.argv[1:]:
+        run_subprocess(sys.argv[1:])
+    else:
+        sys.exit(main(*sys.argv[1:]))
 
 
