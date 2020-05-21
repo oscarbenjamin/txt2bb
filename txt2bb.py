@@ -310,7 +310,7 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(out_format, random, in_file, out_file=None):
+def main(out_format, random, in_file, out_file):
    
     with open(in_file) as infile:
         raw_questions = txt2py(infile)
@@ -350,13 +350,9 @@ def main(out_format, random, in_file, out_file=None):
         lines = q2latex(questions)
     elif out_format == "--bb":
         lines = q2bb(questions)
-    if out_file: 
-        with open(out_file,'w') as out:
-            for line in lines:
-                print(line, file=out)
-    else:
+    with open(out_file,'w') as out:
         for line in lines:
-            print(line)
+            print(line, file=out)
 
     return 0
 
@@ -559,16 +555,6 @@ if __name__ == "__main__":
     random = True if sys.argv[2]=='--randomise' else False
     in_files = sys.argv[3:] if random else sys.argv[2:]
     
-    # If no target file is specified, create them
-    if sys.stdout.isatty():
-        for f in in_files:
-            make_outfiles(out_format, random, in_files)
+    for f in in_files:
+        make_outfiles(out_format, random, in_files)
     
-    # If one is specified, assume only one in_file is used
-    else:
-        if out_format not in ['--bb','--latex']:
-            raise ValueError('\n---Directed output should only be used for --bb or --latex flags---\n')
-
-        main(out_format, random, in_files[0])
-
-
