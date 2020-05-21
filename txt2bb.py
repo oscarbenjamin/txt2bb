@@ -46,6 +46,7 @@ appropriate (list) format for the specified file type.
 import sys
 import re
 from itertools import chain
+import subprocess
 
 #--------------------------------Question Classes---------------------------------#
 class Question:
@@ -532,17 +533,16 @@ def latex_enumerate(items, latex_item_func):
         yield from latex_item_func(item)
     yield ENUM_END
 
-def make_outfiles(out_format, random, in_files):
-    if out_format == '--bb':
-        for f in in_files:
-            main(out_format, random, f, f.strip('.txt')+'_bb.txt')
-    
-    elif out_format == '--latex':
-        for f in in_files:
-            main(out_format, random, f, f.strip('.txt')+'.tex')
-    else:
-        import subprocess
-        for f in in_files:
+def make_outfiles(out_format, random, in_files, out_file):
+    for f in in_files:
+        if out_format == '--bb':
+            bb_file = f.strip('.txt')+'_bb.txt' if not out_file else out_file
+            main(out_format, random, f, bb_file)
+        
+        elif out_format == '--latex':
+            latex_file = f.strip('.txt')+'.tex' if not out_file else out_file
+            main(out_format, random, f, latex_file)
+        else:
             main('--bb', random, f, f.strip('.txt')+'_bb.txt')
             main('--latex', random, f, f.strip('.txt')+'.tex')
             subprocess.run(['pdflatex',f.strip('.txt')+'.tex'])
@@ -553,8 +553,12 @@ if __name__ == "__main__":
         raise ValueError('\n---Out format must be --bb,--latex, or --all---\n')
 
     random = True if sys.argv[2]=='--randomise' else False
-    in_files = sys.argv[3:] if random else sys.argv[2:]
+    files = sys.argv[3:] if random else sys.argv[2:]
+    out_file = None
+
+    if '--output' in files:
+        out_file = files[-1]
+        files = files[:-2]
     
-    for f in in_files:
-        make_outfiles(out_format, random, in_files)
+    make_outfiles(out_format, random, files, out_file)
     
