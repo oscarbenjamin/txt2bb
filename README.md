@@ -115,7 +115,7 @@ For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 Usage
 -----
 ```
-$ python txt2bb.py (--latex | --bb | --all) [--randomise] in_file.txt [,in_file2.txt, ...]
+$ python txt2bb.py (--latex | --bb | --all) [--randomise] in_file.txt [in_file2.txt ...] [--output out_file.txt]
 ```
 
 Once you have your questions written up, you can convert them either to
@@ -165,6 +165,11 @@ blackboard files is
 ```
 $ python txt2bb.py --all --randomise questions.txt
 ```
+There is also the functionality to direct the output to a specific file with
+the optional flag `--output` followed by the filename you wish to direct to.
+This should be added at the end of the arguments and will only work if one
+input file is specified since otherwise each input file will overwrite the same
+output file.
 
 Note
 ----

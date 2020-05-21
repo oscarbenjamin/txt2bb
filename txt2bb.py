@@ -559,6 +559,8 @@ if __name__ == "__main__":
     if '--output' in files:
         out_file = files[-1]
         files = files[:-2]
+        if len(files) != 1:
+            raise ValueError('\n---Only 1 input file permitted if output file specified---\n')
     
     make_outfiles(out_format, random, files, out_file)
     
