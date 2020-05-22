@@ -322,24 +322,7 @@ def main(out_format, random, in_file, out_file):
     for question in raw_questions:
         # Check if variants are included in the question
         if re.search('%{', str(question)):
-            variants, num_variants = variant_questions(question)
-            for i in range(num_variants):
-                # Create new question using the ith entries in variant lists
-                var_question = copy.deepcopy(question)
-                questions.append(var_question)
-                # Go through each item that can contain variants and switch them out
-                for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
-                    # Find any variant lists in item that need to be swapped out for their ith variant 
-                    to_replace = re.findall('%{.*?}%', item[1])
-                    for k, entry in enumerate(to_replace):
-                        # Replace escaped , in current variant
-                        var = variants[j][1][k][i].replace('\,',',')
-                        if item[0] == 'prompt':
-                            var_question['prompt'] = var_question['prompt'].replace(entry, var)
-                        else:
-                            in_type, text = var_question['answers'][j]
-                            var_question['answers'][j] = (in_type,text.replace(entry, var))
-
+            questions += produce_variants(question)
         else:
             questions.append(question)
     
@@ -347,7 +330,7 @@ def main(out_format, random, in_file, out_file):
     if random:
         import random
         for question in questions:
-            if question['type'] in ['MA','MC']:
+            if question['type'] in ['MA','MC','JUMBLED_SENTENCE']:
                 random.shuffle(question['answers'])
 
 
@@ -377,6 +360,31 @@ def variant_questions(question):
         raise ValueError("\n\n  All variants must be the same length\n")
     return variants, lens[0]
 
+def produce_variants(question):
+    """Produce all specified variants of questions
+
+    question (dict) -> question_variants (list[dict])
+    """
+    question_variants = []
+    variants, num_variants = variant_questions(question)
+    for i in range(num_variants):
+        # Create new question using the ith entries in variant lists
+        var_question = copy.deepcopy(question)
+        question_variants.append(var_question)
+        # Go through each item that can contain variants and switch them out
+        for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
+            # Find any variant lists in item that need to be swapped out for their ith variant 
+            to_replace = re.findall('%{.*?}%', item[1])
+            for k, entry in enumerate(to_replace):
+                # Replace escaped , in current variant
+                var = variants[j][1][k][i].replace('\,',',')
+                if item[0] == 'prompt':
+                    var_question['prompt'] = var_question['prompt'].replace(entry, var)
+                else:
+                    in_type, text = var_question['answers'][j]
+                    var_question['answers'][j] = (in_type,text.replace(entry, var))
+
+    return question_variants
 
 def txt2py(infile):
     """Parse input text format into Python objects.
@@ -462,6 +470,7 @@ def q2bb1(question):
     items = handler.bb()
     # Add Separating new line after question to avoid overcrowded look
     items[1]+='<p></p>'
+    items[1] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[1])
     # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
     # display math mode so these are changed to the MathJax configured one
     return "\t".join(items).replace("$$","~~")
@@ -471,6 +480,7 @@ LATEX_START = r"""
 \documentclass{article}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{graphicx}
 \begin{document}
 """
 
@@ -514,6 +524,8 @@ def q2latex1(question):
     prompt = question["prompt"].replace('<br>',r'\\\\')
     # Escape any % that aren't already as they comment out the line in Latex
     prompt = re.sub(r'(?<!\\)%','\\%', prompt)
+    prompt = re.sub('@{(.+?)}@',r'\\includegraphics[width=\\textwidth]{\1}',prompt)
+
     yield prompt
     if question["type"] in Q_TYPES:
         handler = HANDLERS[question["type"]](question)
