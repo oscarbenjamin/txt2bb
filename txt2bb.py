@@ -347,7 +347,7 @@ def main(out_format, random, in_file, out_file):
     if random:
         import random
         for question in questions:
-            if question['type'] in ['MA','MC']:
+            if question['type'] in ['MA','MC','JUMBLED_SENTENCE']:
                 random.shuffle(question['answers'])
 
 
