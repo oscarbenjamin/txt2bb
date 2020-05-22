@@ -114,9 +114,13 @@ For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 
 Usage
 -----
+
+# Generic
+
 ```
 $ python txt2bb.py (--latex | --bb | --all) [--randomise] in_file.txt [in_file2.txt ...] [--output out_file.txt]
 ```
+# Specific
 
 Once you have your questions written up, you can convert them either to
 latex format to view locally or to Blackboards tab-delimited format, or produce
@@ -152,34 +156,57 @@ $ python txt2bb.py --bb questions.txt
 which will produce questions_bb.txt. This is then ready to upload to
 Blackboard.
 
+# Multiple Question Files
+
 Multiple question files at once can be parsed, a corresponding file for each
 input file will be produced in whichever format, or if `--all` is specified
 then all three file types will be produced for each input file.
 
-The order that answers are given is preserved in this script. If you wish for
-Multiple choice and Multiple answer type questions to have their answers
-randomised automatically, this can be specified with the additional flag
+# Randomising Answers
+
+The order that answers are given is preserved in this script. Randomising will
+affect Multiple choice, Multiple answer, and Jumbled Sentence question types producing their answers
+in a random order. This can be specified with the additional flag
 `--randomise`. An example of how this would look when producing both Latex and
 blackboard files is
 
 ```
 $ python txt2bb.py --all --randomise questions.txt
 ```
+# Specify Output File
+
 There is also the functionality to direct the output to a specific file with
 the optional flag `--output` followed by the filename you wish to direct to.
 This should be added at the end of the arguments and will only work if one
 input file is specified since otherwise each input file will overwrite the same
 output file.
 
-Note
+# Including Images
+
+There is limited functionality to include images for purely Latex format. 
+To specify an image at a set location, use `@{image_file}@` within your code.
+By default in BlackBoard an uploaded image is the width of the textbox so the
+same default is set here (textwidth in Latex). 
+This feature is to help better visualise the final test as it will look on Blackboard. Since
+file upload to Blackboard is not supported, the location for the image will be
+specified with `+++FIGURE "image_file" HERE+++` to aid whoever is uploading the
+test to Blackboard in correctly replacing the images. It is recommended to
+place the image on a new line so it formats correctly in Latex. For example
+
+```
+type: MC
+prompt: Here is my question with an image to support it
+> @{my_image}@ 
+... (continues)
+```
+
+Footnote
 ----
 
-You can now upload questions_bb.txt to Blackboard as a test or question pool
-using the "Upload questions" button. The blackboard format text file will have
-been compiled to run alongside MathJax. The HTML code within the file
-MathJax.txt should be pasted into the 'Instructions' box of any test you are
-producing with this script. When presented with the 'Instructions' box, click
-the 'HTML' button in the toolbar and paste the code into there then click
-update. Once this is submitted the equations should render correctly within
-the browser.
+The blackboard format text file will have been compiled to run alongside
+MathJax. The HTML code within the file MathJax.txt should be pasted into the
+'Instructions' box of any test you are producing with this script. When
+presented with the 'Instructions' box, click the 'HTML' button in the toolbar
+and paste the code into there then click update. Once this is submitted the
+equations should render correctly within the browser.
 
