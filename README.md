@@ -75,7 +75,7 @@ matching up with the question variant if there is one.
 If you wish to include a `,` in the option itself it should be written as `\,`
 to avoid the script thinking you are separating two variants.
 
-### NOTES:
+### New Lines
 
 If the question should contain a linebreak, start each new line with `>`. 
 
@@ -96,13 +96,15 @@ This will be written as a new line since it starts with a '>'
 New lines should always either be a new entry (such as the next answer), or escaped with `\`, or enforced
 with `>`.
 
+### Question Types
 Examples of every question can be found in questions.txt.
 
 For question type `JUMBLED_SENTENCE`, the choices are listed as answers,
 followed by any variables they correspond to. The variables appear after a
 second colon and are separated by commas if multiple variables correspond to
 the choice. **You cannot use `[` or `]` within this question type apart from to
-specify variables**
+specify variables**. If you need them in an equation, they must be specified
+with commads like `\lbrack` or `\begin{bmatrix}`.
 
 For question types `ESS` and `SR` there is the option to add an example
 answer, preceded by `example: `. 
@@ -115,12 +117,12 @@ For question type `MAT`, pairs must be preceded by `match_a` and `match_b`.
 Usage
 -----
 
-# Generic
+### Generic
 
 ```
 $ python txt2bb.py (--latex | --bb | --all) [--randomise] in_file.txt [in_file2.txt ...] [--output out_file.txt]
 ```
-# Specific
+### Specific
 
 Once you have your questions written up, you can convert them either to
 latex format to view locally or to Blackboards tab-delimited format, or produce
@@ -156,13 +158,13 @@ $ python txt2bb.py --bb questions.txt
 which will produce questions_bb.txt. This is then ready to upload to
 Blackboard.
 
-# Multiple Question Files
+### Multiple Question Files
 
 Multiple question files at once can be parsed, a corresponding file for each
 input file will be produced in whichever format, or if `--all` is specified
 then all three file types will be produced for each input file.
 
-# Randomising Answers
+### Randomising Answers
 
 The order that answers are given is preserved in this script. Randomising will
 affect Multiple choice, Multiple answer, and Jumbled Sentence question types producing their answers
@@ -173,7 +175,7 @@ blackboard files is
 ```
 $ python txt2bb.py --all --randomise questions.txt
 ```
-# Specify Output File
+### Specify Output File
 
 There is also the functionality to direct the output to a specific file with
 the optional flag `--output` followed by the filename you wish to direct to.
@@ -181,7 +183,7 @@ This should be added at the end of the arguments and will only work if one
 input file is specified since otherwise each input file will overwrite the same
 output file.
 
-# Including Images
+### Including Images
 
 There is limited functionality to include images for purely Latex format. 
 To specify an image at a set location, use `@{image_file}@` within your code.
