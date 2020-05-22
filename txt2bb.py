@@ -47,6 +47,7 @@ import sys
 import re
 from itertools import chain
 import subprocess
+import copy
 
 #--------------------------------Question Classes---------------------------------#
 class Question:
@@ -321,21 +322,24 @@ def main(out_format, random, in_file, out_file):
     for question in raw_questions:
         # Check if variants are included in the question
         if re.search('%{', str(question)):
-            variants_dict, num_variants = variant_questions(question)
+            variants, num_variants = variant_questions(question)
             for i in range(num_variants):
                 # Create new question using the ith entries in variant lists
-                var_question = {}
+                var_question = copy.deepcopy(question)
                 questions.append(var_question)
-                for key, val in variants_dict.items():
-                    var_question[key] = question[key]
-                    to_replace = re.findall('%{.*?}%', ''.join(chain.from_iterable(question[key])))
-                    for num, entry in enumerate(to_replace):
-                        # Correct for escaped ',' in variant list text
-                        variant = val[num][i].replace('\,',',')
-                        if type(var_question[key]) == list:
-                            var_question[key] = [item.replace(entry, variant) for item in var_question[key]]
+                # Go through each item that can contain variants and switch them out
+                for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
+                    # Find any variant lists in item that need to be swapped out for their ith variant 
+                    to_replace = re.findall('%{.*?}%', item[1])
+                    for k, entry in enumerate(to_replace):
+                        # Replace escaped , in current variant
+                        var = variants[j][1][k][i].replace('\,',',')
+                        if item[0] == 'prompt':
+                            var_question['prompt'] = var_question['prompt'].replace(entry, var)
                         else:
-                            var_question[key] = var_question[key].replace(entry, variant)
+                            in_type, text = var_question['answers'][j]
+                            var_question['answers'][j] = (in_type,text.replace(entry, var))
+
         else:
             questions.append(question)
     
@@ -359,17 +363,19 @@ def main(out_format, random, in_file, out_file):
 
 def variant_questions(question):
     # Find all options encased by %{ }%
-    variants_dict = {}
-    for key, val in question.items():
-        variants = re.findall(r'%{(.*?)}%', ''.join(chain.from_iterable(val)))
-        # Split list at ',' if not escaped with \
-        variants_dict[key] = [re.split(r' *(?<!\\), *', item) for item in variants]
-    # Check all options can be matched up (equal length option lists)
-    lens = [len(item) for item in chain.from_iterable(variants_dict.values())]
-    if len(set(lens)) != 1:
-        raise ValueError("\n\n    All variants must be the same length\n")
+    unboxed_question = question['answers'] + [('prompt', question['prompt'])] 
+    variants = []
 
-    return variants_dict, lens[0]
+    for in_type, text in unboxed_question:
+        all_variants = re.findall(r'%{(.*?)}%', text)
+        # Split list at ',' if not escaped with \ and add to labelled list of variants
+        variants.append((in_type, [re.split(r' *(?<!\\), *', item) for item in all_variants]))
+
+    # Check all options can be matched up (equal length option lists)
+    lens = [len(i) for _, item in variants for i in item]
+    if len(set(lens)) != 1:
+        raise ValueError("\n\n  All variants must be the same length\n")
+    return variants, lens[0]
 
 
 def txt2py(infile):
