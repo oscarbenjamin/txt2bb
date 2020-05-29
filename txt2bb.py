@@ -470,7 +470,9 @@ def q2bb1(question):
     items = handler.bb()
     # Add Separating new line after question to avoid overcrowded look
     items[1]+='<p></p>'
-    items[1] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[1])
+    # Add image pointers for uploader to replace with actual image
+    for i in range(len(items)):
+        items[i] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[i])
     # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
     # display math mode so these are changed to the MathJax configured one
     return "\t".join(items).replace("$$","~~")
@@ -524,7 +526,13 @@ def q2latex1(question):
     prompt = question["prompt"].replace('<br>',r'\\\\')
     # Escape any % that aren't already as they comment out the line in Latex
     prompt = re.sub(r'(?<!\\)%','\\%', prompt)
-    prompt = re.sub('@{(.+?)}@',r'\\includegraphics[width=\\textwidth]{\1}',prompt)
+    # Add specified images to Latex version at 0.7*textwidth
+    prompt = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}',prompt)
+    # Add specified images to answers aswell since this is (sort of) supported aswell
+    for i in range(len(question['answers'])):
+        text_with_im = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}', question['answers'][i][1])
+        question['answers'][i] = (question['answers'][i][0], text_with_im)
+                
 
     yield prompt
     if question["type"] in Q_TYPES:
