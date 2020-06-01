@@ -45,17 +45,19 @@ type is formatted can be found
 
 In order to generate multiple versions of the same question, the list of
 variants must be listed between `%{` and `}%`, separated by commas. These
-variants can be placed within both questions and answers but there must
+variants can be used within question prompts, answers, and answer
+classifiers (such as 'correct' or 'incorrect'). There must
 be the same number of variants in each list as they will be matched up when the
-multiple questions are generated. An example is shown below
+multiple questions are generated. An example is shown below of each type of
+variant that can be implemented.
 
 ```
 type: MC
 prompt: What is the square root of %{16, 25, 36}%?
-correct: %{4, 5, 6}%
-incorrect: %{2, 6, 7}%
-incorrect: 3
-incorrect: 8
+%{correct, incorrect, incorrect}%: 4
+%{incorrect, correct, incorrect}%: 5
+%{incorrect, incorrect, correct}%: 6
+incorrect: %{3, 7, 8}%
 ```
 
 This will produce three similar questions, the first being:
@@ -64,9 +66,9 @@ This will produce three similar questions, the first being:
 type: MC
 prompt: What is the square root of 16?
 correct: 4
-incorrect: 2
+incorrect: 5
+incorrect: 6
 incorrect: 3
-incorrect: 8
 ```
 
 Be careful that the variants labelled 'correct' and 'incorrect' will definitely be accurate when
