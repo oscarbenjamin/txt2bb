@@ -322,7 +322,7 @@ def main(out_format, random, in_file, out_file):
     for question in raw_questions:
         # Check if variants are included in the question
         if re.search('%{', str(question)):
-            questions += produce_variants(question)
+            questions += produce_variant_questions(question)
         else:
             questions.append(question)
     
@@ -344,29 +344,30 @@ def main(out_format, random, in_file, out_file):
 
     return 0
 
-def variant_questions(question):
+def extract_variants(question):
     # Find all options encased by %{ }%
     unboxed_question = question['answers'] + [('prompt', question['prompt'])] 
     variants = []
-
     for in_type, text in unboxed_question:
-        all_variants = re.findall(r'%{(.*?)}%', text)
+        text_variants = re.findall(r'%{(.*?)}%', text)
+        type_variants = re.findall(r'%{(.*?)}%', in_type)
         # Split list at ',' if not escaped with \ and add to labelled list of variants
-        variants.append((in_type, [re.split(r' *(?<!\\), *', item) for item in all_variants]))
-
+        variants.append(([re.split(r' *(?<!\\), *', item) for item in type_variants], 
+                         [re.split(r' *(?<!\\), *', item) for item in text_variants]))
+    
     # Check all options can be matched up (equal length option lists)
-    lens = [len(i) for _, item in variants for i in item]
+    lens = [len(i) for _,text in variants for i in text] + [len(i) for typ,_ in variants for i in typ]
     if len(set(lens)) != 1:
         raise ValueError("\n\n  All variants must be the same length\n")
     return variants, lens[0]
 
-def produce_variants(question):
+def produce_variant_questions(question):
     """Produce all specified variants of questions
 
     question (dict) -> question_variants (list[dict])
     """
     question_variants = []
-    variants, num_variants = variant_questions(question)
+    variants, num_variants = extract_variants(question)
     for i in range(num_variants):
         # Create new question using the ith entries in variant lists
         var_question = copy.deepcopy(question)
@@ -374,8 +375,9 @@ def produce_variants(question):
         # Go through each item that can contain variants and switch them out
         for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
             # Find any variant lists in item that need to be swapped out for their ith variant 
-            to_replace = re.findall('%{.*?}%', item[1])
-            for k, entry in enumerate(to_replace):
+            text_replace = re.findall('%{.*?}%', item[1])
+            type_replace = re.findall('%{.*?}%', item[0])
+            for k, entry in enumerate(text_replace):
                 # Replace escaped , in current variant
                 var = variants[j][1][k][i].replace('\,',',')
                 if item[0] == 'prompt':
@@ -383,6 +385,18 @@ def produce_variants(question):
                 else:
                     in_type, text = var_question['answers'][j]
                     var_question['answers'][j] = (in_type,text.replace(entry, var))
+            for k, entry in enumerate(type_replace):
+                # Replace escaped , in current variant
+                var = variants[j][0][k][i].replace('\,',',')
+                in_type, text = var_question['answers'][j]
+                var_question['answers'][j] = (in_type.replace(entry, var), text)
+
+        # Check all in_types are valid for each variant
+        if any(typ not in IN_TYPES + ('type', 'prompt') for typ,_ in var_question['answers']):
+            key = list(set(typ for typ,_ in var_question['answers']) - set(IN_TYPES+('type', 'prompt')))[0]
+            q = var_question['prompt'][:100]+'...' if len(var_question['prompt']) > 100 else var_question['prompt']
+            msg = '\n\n    Unrecognised key "{}" for question "{}"\n'.format(key,q)
+            raise ValueError(msg)
 
     return question_variants
 
@@ -440,14 +454,11 @@ def txt2py(infile):
             key, val = line.split(':',1)
             key = key.strip()
             val = val.strip()
-            if key not in IN_TYPES + ('type', 'prompt'):
-                msg = "Line %s: Unrecognised key %s" % (lineno, key)
-                raise ValueError(msg)
 
-            if key in IN_TYPES:
-                question['answers'].append((key,val))
-            else:
+            if key in ('type', 'prompt'):
                 question[key] = val
+            else:
+                question['answers'].append((key,val))
     
     return questions
 
