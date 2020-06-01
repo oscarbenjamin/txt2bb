@@ -81,22 +81,22 @@ to avoid the script thinking you are separating two variants.
 
 If the question should contain a linebreak, start each new line with `>`. 
 
-If you wish to ignore a linebreak in the input file finish the line with '\'
+If you wish to ignore a linebreak in the input file finish the line with `\`
 
 For example:
 ```
 This is a line that you do not wish\
 to break so must use '\'.
->This will be written as a new line since it starts with a '>'
+>This will be written as a new line since it starts with '>'
 ```
 will produce
 ```
-This is a line that you do not wish to break so must begin immediately with '\'.
-This will be written as a new line since it starts with a '>'
+This is a line that you do not wish to break so must use '\'.
+This will be written as a new line since it starts with '>'
 ```
 
-New lines should always either be a new entry (such as the next answer), or escaped with `\`, or enforced
-with `>`.
+**New lines should always either be a new entry (such as the next answer), or escaped with `\`, or enforced
+with `>`.**
 
 ### Question Types
 Examples of every question can be found in questions.txt.
