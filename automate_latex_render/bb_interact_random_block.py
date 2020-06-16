@@ -99,7 +99,7 @@ def main(url, hide, randomise):
         q_nums = driver.find_elements(By.XPATH, "//*[starts-with(@id,'totalNoQuestions')]")
         qs = [int(q.text) for q in q_nums]
         cum_qs = np.cumsum(qs)
-        for i in range(85,len(arrow_buttons)):
+        for i in range(len(arrow_buttons)):
             time.sleep(1)
             previews = driver.find_elements(By.XPATH, "//*[@class='itemHead']")
             p = np.where(cum_qs>i)[0][0]
