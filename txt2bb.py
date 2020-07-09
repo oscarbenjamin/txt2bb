@@ -312,10 +312,9 @@ IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
         'tolerance', 'variable', 'q_word', 'q_phrase')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(out_format, random, in_file, out_file):
+def main(out_format, random, filename, out_file):
    
-    with open(in_file) as infile:
-        raw_questions = txt2py(infile)
+    raw_questions = txt2py(filename)
     
     questions = []
 
@@ -400,41 +399,91 @@ def produce_variant_questions(question):
 
     return question_variants
 
-def txt2py(infile):
+def error_check_raise(file_name, expr, text, msg):
+    if re.search(expr, text):
+        print('----------')
+        print(expr)
+        print(re.search(expr, text))
+        print(text[re.search(expr, text).start()-3:re.search(expr, text).start()+10])
+        print('----------')
+        pos = re.search(expr, text).start()
+        line = text[:pos].count('\n') + 1
+        msg = '\n\n   '+file_name+': '+msg.format(line)+'\n'
+        raise SyntaxError(msg)
+
+def parse_checker(file_name, text):
+    """Run through all known causes of errors when uploading to Blackboard and
+    raise them to be fixed before any files are produced.
+    """
+    msg = '"<" on line {} needs a space after it.'
+    error_check_raise(file_name, '<\S', text, msg)
+    msg = '">" on line {} needs a space before it.'
+    error_check_raise(file_name, '.\S>', text, msg)
+    msg = 'Tab used on line {}. Instead use spaces.'
+    error_check_raise(file_name, r'\t', text, msg)
+    msg = '"\\text{{}}" used on line {}. Instead use "\\mathrm{{}}".'
+    error_check_raise(file_name, r'\\text{', text, msg)
+    msg = '"\\def{{}}" used in line {}. Not supported in MathJax.'
+    error_check_raise(file_name, r'\\def{', text, msg)
+    msg = 'Space used within "\\mathrm{{}}" on line {}. Instead use "\\,".'
+    error_check_raise(file_name, r'\\mathrm{[^ }]* ', text, msg)
+    #msg = 'Space used after "\\left" or "\\right" on line {}. No spaces can be used.'
+    #error_check_raise(file_name, r'(\\left|\\right) +', text, msg)
+    #error_check_raise(file_name, r'} +{', text, msg)
+    #error_check_raise(file_name, r'} +\\', text, msg)
+    #error_check_raise(file_name, r'(\\\w*?) +\\', text, msg)
+    msg = 'Space used in equation on line {}. Replace with "{{}}" if needed'
+    eqs = re.findall(r'\$+[^\$]*?\$+', text)
+    for eq in eqs:
+        if ' ' in eq:
+            print(eq)
+            error_check_raise(file_name, re.escape(eq[eq.index(' '):]), text, msg)
+
+
+
+def txt2py(filename):
     """Parse input text format into Python objects.
 
     list of lines (str) -> list of questions (dict)
     """
 
     questions = []
+    with open(filename, 'r') as infile:
+        text = infile.read()
+
+    parse_checker(filename, text)
+
     # Inserting linebreak character for --bb case (<br>), this then
     # functions as placeholder for --latex case (\\)
-    text = re.sub(' *\n> *','<br>',infile.read())
-    # Mathjax cannot have > or < next to a letter (space needed) ignore <br>
-    text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
-    # Remove tabs to avoid confusing bb format
-    text = re.sub('\t', '', text)
+    text = re.sub(' *\n> *','<br>', text)
+    
     # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
     # This flattens newlines that are escaped with '\'
-    text = re.sub(r' *\\\n *',' ', text)
-    # Replace all space in equations with {} to avoid Blackboard messing up
-    # Replace all space within \text or \mathrm with \', instead of {}
-    text = text.replace('\\text{','\\mathrm{')
-    eq_texts = re.findall(r'\\mathrm({.*?})', text)
-    for eq_text in eq_texts:
-        text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
+    text = re.sub(r'\\\n','', text)
+
+    # Mathjax cannot have > or < next to a letter (space needed) ignore <br>
+    #text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
+    # Remove tabs to avoid confusing bb format
+    #text = re.sub('\t', '', text)
+    # \text is more tempramental than \mathrm, so is switched over
+    #text = text.replace('\\text{','\\mathrm{')
+    # Replace all space within \mathrm with \, instead of {}
+    #eq_texts = re.findall(r'\\mathrm({.*?})', text)
+    #for eq_text in eq_texts:
+        #text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
 
     # Cannot have space after \left or \right as {} will be inserted after
-    text = re.sub(r'(\\left|\\right) +',r'\1', text)
+    #text = re.sub(r'(\\left|\\right) +',r'\1', text)
     # Should not have spaces between commands such as \begin{array} {l} or {l} \hline
-    text = re.sub(r'} +{', r'}{', text)
-    text = re.sub(r'} +\\', r'}\\', text)
-    text = re.sub(r'(\\\w*)? +\\', r'\1\\', text)
+    #text = re.sub(r'} +{', r'}{', text)
+    #text = re.sub(r'} +\\', r'}\\', text)
+    #text = re.sub(r'(\\\w*)? +\\', r'\1\\', text)
 
-    eqs = re.findall('\$+([^\$]+?)\$+', text)
-    for eq in eqs:
-        text = text.replace(eq,re.sub(' ','{}',eq))
+    # Replace all space in equations with {} to avoid Blackboard messing up
+    #eqs = re.findall('\$+([^\$]+?)\$+', text)
+    #for eq in eqs:
+        #text = text.replace(eq,re.sub(' ','{}',eq))
         
     lines = text.splitlines()
 
