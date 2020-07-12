@@ -332,13 +332,12 @@ q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'FIB_PLUS')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
-        'tolerance', 'variable', 'q_word', 'q_phrase')
+        'tolerance', 'variable', 'q_word', 'q_phrase', 'notes')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
 def main(out_format, random, filename, out_file):
    
     raw_questions = txt2py(filename)
-    
     questions = []
 
     for question in raw_questions:
@@ -354,7 +353,6 @@ def main(out_format, random, filename, out_file):
         for question in questions:
             if question['type'] in ['MA','MC','JUMBLED_SENTENCE']:
                 random.shuffle(question['answers'])
-
 
     if out_format == "--latex":
         lines = q2latex(questions)
@@ -520,6 +518,8 @@ def q2bb1(question):
     # Add image pointers for uploader to replace with actual image
     for i in range(len(items)):
         items[i] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[i])
+    if 'notes' in items:
+        del items[items.index('notes')-1:items.index('notes')+1]
     # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
     # display math mode so these are changed to the MathJax configured one
     return "\t".join(items).replace("$$","~~")
@@ -555,7 +555,6 @@ def q2latex(questions):
 
 def latex_item(item):
     typ, ans = item
-    print(typ,ans)
     # Replaces line break symbol <br> from txt2py() and returns latex formatted line
     ans = ans.replace('<br>',r'\\')
     # Escape any % that aren't already as they comment out the line in Latex
@@ -592,7 +591,6 @@ def q2latex1(question):
     if question['type'] in Q_TYPES:
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
-
         if not items:
             pass
         # Enumeration not needed if 1 element or different pairings used
@@ -601,7 +599,11 @@ def q2latex1(question):
                 yield ""
                 yield from latex_item(item)
         else:
+            notes = ''
+            if 'notes' in [item[0] for item in items]:
+                notes = items.pop([item[0] for item in items].index('notes'))[1]
             yield from latex_enumerate(items, latex_item)
+            if notes:  yield r"\textbf{Notes: }"+notes
     else:
         raise ValueError("Unrecognised question type")
 
