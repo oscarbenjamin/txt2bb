@@ -345,6 +345,7 @@ def main(out_format, random, filename, out_file):
         if re.search('%{', str(question)):
             questions += produce_variant_questions(question)
         else:
+            question['new'] = True
             questions.append(question)
     
     # Randomise applicable questions if specified
@@ -392,13 +393,14 @@ def produce_variant_questions(question):
         # Create new question using the ith entries in variant lists
         var_question = copy.deepcopy(question)
         question_variants.append(var_question)
+        var_question['prompt'] = r"\hspace{-5pt}%d. "%(i+1)+var_question['prompt']
         # Go through each item that can contain variants and switch them out
         for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
             # Find any variant lists in item that need to be swapped out for their ith variant 
-            text_replace = re.findall('%{.*?}%', item[1])
             type_replace = re.findall('%{.*?}%', item[0])
+            text_replace = re.findall('%{.*?}%', item[1])
             for k, entry in enumerate(text_replace):
-                # Replace escaped , in current variant
+                # Replace escaped ',' in current variant
                 var = variants[j][1][k][i].replace('\,',',')
                 if item[0] == 'prompt':
                     var_question['prompt'] = var_question['prompt'].replace(entry, var)
@@ -411,6 +413,7 @@ def produce_variant_questions(question):
                 in_type, text = var_question['answers'][j]
                 var_question['answers'][j] = (in_type.replace(entry, var), text)
 
+
         # Check all in_types are valid for each variant
         if any(re.findall("[a-zA-Z]+",typ)[0] not in IN_TYPES + ('type', 'prompt') for typ,_ in var_question['answers']):
             key = list(set(typ for typ,_ in var_question['answers']) - set(IN_TYPES+('type', 'prompt')))[0]
@@ -418,6 +421,7 @@ def produce_variant_questions(question):
             msg = '\n\n    Unrecognised key "{}" for question "{}"\n'.format(key,q)
             raise ValueError(msg)
 
+    question_variants[0]['new'] = True
     return question_variants
 
 def error_check_raise(file_name, expr, text, msg):
@@ -482,6 +486,8 @@ def txt2py(filename):
             question = {}
             question['answers'] = []
             questions.append(question)
+            # Variant question by default, new questions will be marked True
+            question['new'] = False
 
         # key : val
         elif ':' in line:
@@ -493,7 +499,7 @@ def txt2py(filename):
                 question[key] = val
             else:
                 question['answers'].append((key,val))
-    
+
     return questions
 
 
@@ -513,11 +519,16 @@ def q2bb1(question):
     else:
         raise ValueError("Unrecognised question type")
     items = handler.bb()
+    # Check if variant subnumbering is present and remove
+    var_num = re.findall(r"\\hspace{-5pt}\d+\. ", items[1])
+    if var_num: items[1] = items[1].strip(var_num[0])
+
     # Add Separating new line after question to avoid overcrowded look
     items[1]+='<p></p>'
     # Add image pointers for uploader to replace with actual image
     for i in range(len(items)):
         items[i] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[i])
+    # Remove notes written for pdf version
     if 'notes' in items:
         del items[items.index('notes')-1:items.index('notes')+1]
     # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
@@ -550,7 +561,7 @@ def q2latex(questions):
     The result is a self-contained LaTeX document
     """
     yield from LATEX_START.splitlines()
-    yield from latex_enumerate(questions, q2latex1)
+    yield from latex_enumerate(questions, q2latex1, 1)
     yield from LATEX_END.splitlines()
 
 def latex_item(item):
@@ -562,7 +573,7 @@ def latex_item(item):
     # Prevent answer lines from showing up in display mode
     ans = ans.replace('$$',r'$')
     # Handle partial marks
-    if '(' in typ:
+    if '(' in str(typ):
         par_cred = typ[typ.index('('):typ.index(')')+1]
         typ = re.findall("[a-zA-Z]+", typ)[0]
         return [r"\textbf{{{}}} - \emph{{{}}}: {}".format(par_cred, typ, ans)]
@@ -581,7 +592,7 @@ def q2latex1(question):
     # Escape any % that aren't already as they comment out the line in Latex
     prompt = re.sub(r'(?<!\\)%','\\%', prompt)
     # Add specified images to Latex version at 0.7*textwidth
-    prompt = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}',prompt)
+    prompt = re.sub('@{(.+?)}@', r'\\includegraphics[width=0.7\\textwidth]{\1}', prompt)
     # Add specified images to answers aswell since this is (sort of) supported aswell
     for i in range(len(question['answers'])):
         text_with_im = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}', question['answers'][i][1])
@@ -589,29 +600,39 @@ def q2latex1(question):
                
     yield prompt
     if question['type'] in Q_TYPES:
+        notes = ''
+        keys = [item[0] for item in question['answers']]
+        if 'notes' in keys:
+            notes = question['answers'].pop(keys.index('notes'))[1]
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
-        if not items:
+        if not items and not notes:
             pass
-        # Enumeration not needed if 1 element or different pairings used
-        elif len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
-            for item in items:
-                yield ""
-                yield from latex_item(item)
         else:
-            notes = ''
-            if 'notes' in [item[0] for item in items]:
-                notes = items.pop([item[0] for item in items].index('notes'))[1]
-            yield from latex_enumerate(items, latex_item)
-            if notes:  yield r"\textbf{Notes: }"+notes
+            # Enumeration not needed if 1 element or different pairings used
+            if len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
+                for item in items:
+                    yield ""
+                    yield from latex_item(item)
+                yield ""
+            else:
+                yield from latex_enumerate(items, latex_item, 2)
+
+            if notes: yield r"\textbf{Notes: }"+notes
     else:
         raise ValueError("Unrecognised question type")
 
 
-def latex_enumerate(items, latex_item_func):
+def latex_enumerate(items, latex_item_func, level):
     """Wrap items in a latex enumerate"""
+    q_counter = -1
     yield ENUM_START
-    for item in items:
+    for num, item in enumerate(items):
+        # Check this is on question level, not answer level
+        if level==1:
+            if item['new']: q_counter+=1
+            yield r"\setcounter{enumi}{%d}"%q_counter
+            # If this is not a variant question, increase question counter
         yield ITEM
         yield from latex_item_func(item)
     yield ENUM_END
