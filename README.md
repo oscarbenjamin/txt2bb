@@ -77,6 +77,10 @@ matching up with the question variant if there is one.
 If you wish to include a `,` in the option itself it should be written as `\,`
 to avoid the script thinking you are separating two variants.
 
+Variants will appear in the PDF version with the same question number but a
+subnumbering to help identify specific variants. For example, the above example
+might appear as Q2.1 as it is the first variant of question 2.
+
 ### New Lines
 
 If the question should contain a linebreak, start each new line with `>`. 
@@ -85,7 +89,7 @@ If you wish to ignore a linebreak in the input file finish the line with `\`
 
 For example:
 ```
-This is a line that you do not wish\
+This is a line that you do not wish \
 to break so must use '\'.
 >This will be written as a new line since it starts with '>'
 ```
@@ -203,6 +207,21 @@ prompt: Here is my question with an image to support it
 > @{my_image}@ 
 ... (continues)
 ```
+
+### Notes for Exam Uploaders
+
+In order to help communication between the setters and the uploaders, there is
+the option to add notes for each question that will appear in the PDF at the
+bottom of the question. This is specified with the `notes:` keyword which is
+written as if it is an answer to the question. Some examples of this are
+included in the questions.txt file.
+
+The ability to specify partial credit for different answers is also supported.
+This is done with parentheses: `()` containing the intended percentage of the
+total mark to be attained, written at the start of an answers line. Again
+this only works within the PDF and is intended to communicate to the uploader
+any extra information about the questions. And example is shown in
+questions.txt.
 
 Footnote
 ----

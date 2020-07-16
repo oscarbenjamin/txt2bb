@@ -65,22 +65,22 @@ class Question:
 class MC(Question):
     def __init__(self, question):
         Question.__init__(self, question)
-        correct_occur = re.findall("'correct'",str(self.answers))
-
+        correct_occur = re.findall("[^in]correct",str([item[0] for item in self.answers]))
         if len(correct_occur) != 1:
             raise ValueError("Only 1 correct answer should be provided")
 
     def bb(self):
         items = [self.type, self.prompt]
         for correct, ans in self.answers:
-                items.append(ans)
-                items.append(correct)
+            correct = re.findall("[a-zA-Z]+",correct)[0]   
+            items.append(ans)
+            items.append(correct)
         return items
 
     def latex(self):
         items = []
         for correct, ans in self.answers:
-                items.append((correct, ans))
+            items.append((correct, ans))
         return items
 
 
@@ -88,14 +88,15 @@ class MA(Question):
     def bb(self):
         items = [self.type, self.prompt]
         for correct, ans in self.answers:
-                items.append(ans)
-                items.append(correct)
+            correct = re.findall("[a-zA-Z]+",correct)[0]   
+            items.append(ans)
+            items.append(correct)
         return items
 
     def latex(self):
         items = []
         for correct, ans in self.answers:
-                items.append((correct, ans))
+            items.append((correct, ans))
         return items
 
 
@@ -106,8 +107,10 @@ class TF(Question):
         if len(ans_occur) != 1:
             raise ValueError("Only 1 answer should be provided")
         if self.answers[0][1] not in ('true','false'):
-            raise ValueError("valid answers are true or false")
-
+            raise ValueError("Valid answers are true or false")
+        if '(' in self.answers[0][0]:
+            raise ValueError("No partial marks allowed for true or false")
+        
     def bb(self):
         return [self.type, self.prompt, self.answers[0][1]]
 
@@ -117,6 +120,9 @@ class TF(Question):
 
 class ESS(Question):
     def bb(self):
+        if '(' in self.answers[0][0]:
+            raise ValueError("No partial marks allowed for essay questions")
+
         if self.answers:
             return [self.type, self.prompt, self.answers[0][1]]
         else:
@@ -133,7 +139,10 @@ class ORD(Question):
     def __init__(self, question):
         Question.__init__(self, question)
         if not 1 <= len(self.answers) <= 20:
-            raise AssertionError("number of answers must be between 1 and 20")
+            raise AssertionError("Number of answers must be between 1 and 20")
+
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for order questions")
 
     def bb(self):
         return [self.type, self.prompt]+[ans for _,ans in self.answers]
@@ -151,6 +160,10 @@ class MAT(Question):
         if len(mata) != len(matb):
             raise AssertionError("All options must have matching answers")
 
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for matching questions")
+
+
     def bb(self):
         return [self.type, self.prompt]+[val for _,val in self.answers]
 
@@ -163,6 +176,8 @@ class MAT(Question):
 
 class FIL(Question):
     def bb(self):
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for this question type")
         return [self.type, self.prompt]
 
     def latex(self):
@@ -178,6 +193,9 @@ class NUM(Question):
                 self.tol = str(float(self.answers[1][1]))
         except:
             raise ValueError('answer and tolerance must be numbers')
+
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for number questions")
 
     def bb(self):
         if 'tolerance' in str(self.answers):
@@ -208,6 +226,9 @@ class JUMBLED_SENTENCE(Question):
         self.mappings = {}
         var_list = []
         answers = [ans for _,ans in self.answers]
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for jumbled sentence questions")
+
         for ans in answers:
             # Check if variable(s) have been linked to the choice
             if re.search(r':.*\w',ans):
@@ -262,6 +283,8 @@ class FIB_PLUS(Question):
     def __init__(self, question):
         Question.__init__(self, question)
         answers = [ans for _,ans in self.answers]
+        if any('(' in item[0] for item in self.answers):
+            raise ValueError("No partial marks allowed for fill in the blank questions")
         self.mappings = {}
         ans_list = []
         for ans in answers:
@@ -309,14 +332,12 @@ q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB
 Q_TYPES = ('MC', 'MA', 'TF', 'ESS', 'ORD', 'MAT', 'FIL', 'NUM', 'SR', 'OP',
         'JUMBLED_SENTENCE', 'FIB_PLUS')
 IN_TYPES = ('correct', 'incorrect', 'answer', 'match_a', 'match_b', 'example',
-        'tolerance', 'variable', 'q_word', 'q_phrase')
+        'tolerance', 'variable', 'q_word', 'q_phrase', 'notes')
 HANDLERS = dict(zip(Q_TYPES, q_handlers))
 
-def main(out_format, random, in_file, out_file):
+def main(out_format, random, filename, out_file):
    
-    with open(in_file) as infile:
-        raw_questions = txt2py(infile)
-    
+    raw_questions = txt2py(filename)
     questions = []
 
     for question in raw_questions:
@@ -324,6 +345,7 @@ def main(out_format, random, in_file, out_file):
         if re.search('%{', str(question)):
             questions += produce_variant_questions(question)
         else:
+            question['new'] = True
             questions.append(question)
     
     # Randomise applicable questions if specified
@@ -332,7 +354,6 @@ def main(out_format, random, in_file, out_file):
         for question in questions:
             if question['type'] in ['MA','MC','JUMBLED_SENTENCE']:
                 random.shuffle(question['answers'])
-
 
     if out_format == "--latex":
         lines = q2latex(questions)
@@ -372,13 +393,14 @@ def produce_variant_questions(question):
         # Create new question using the ith entries in variant lists
         var_question = copy.deepcopy(question)
         question_variants.append(var_question)
+        var_question['prompt'] = r"\hspace{-5pt}%d. "%(i+1)+var_question['prompt']
         # Go through each item that can contain variants and switch them out
         for j, item in enumerate(var_question['answers'] + [('prompt', var_question['prompt'])]):
             # Find any variant lists in item that need to be swapped out for their ith variant 
-            text_replace = re.findall('%{.*?}%', item[1])
             type_replace = re.findall('%{.*?}%', item[0])
+            text_replace = re.findall('%{.*?}%', item[1])
             for k, entry in enumerate(text_replace):
-                # Replace escaped , in current variant
+                # Replace escaped ',' in current variant
                 var = variants[j][1][k][i].replace('\,',',')
                 if item[0] == 'prompt':
                     var_question['prompt'] = var_question['prompt'].replace(entry, var)
@@ -391,51 +413,67 @@ def produce_variant_questions(question):
                 in_type, text = var_question['answers'][j]
                 var_question['answers'][j] = (in_type.replace(entry, var), text)
 
+
         # Check all in_types are valid for each variant
-        if any(typ not in IN_TYPES + ('type', 'prompt') for typ,_ in var_question['answers']):
+        if any(re.findall("[a-zA-Z]+",typ)[0] not in IN_TYPES + ('type', 'prompt') for typ,_ in var_question['answers']):
             key = list(set(typ for typ,_ in var_question['answers']) - set(IN_TYPES+('type', 'prompt')))[0]
             q = var_question['prompt'][:100]+'...' if len(var_question['prompt']) > 100 else var_question['prompt']
             msg = '\n\n    Unrecognised key "{}" for question "{}"\n'.format(key,q)
             raise ValueError(msg)
 
+    question_variants[0]['new'] = True
     return question_variants
 
-def txt2py(infile):
+def error_check_raise(file_name, expr, text, msg):
+    if re.search(expr, text):
+        pos = re.search(expr, text).start()
+        line = text[:pos].count('\n') + 1
+        msg = '\n\n   '+file_name+': '+msg.format(line)+'\n'
+        raise SyntaxError(msg)
+
+def parse_checker(file_name, text):
+    """Run through all known causes of errors when uploading to Blackboard and
+    raise them to be fixed before any files are produced.
+    """
+    msg = '"<" on line {} needs a space after it.'
+    error_check_raise(file_name, '<\S', text, msg)
+    msg = '">" on line {} needs a space before it.'
+    error_check_raise(file_name, '.\S>', text, msg)
+    msg = 'Tab used on line {}. Instead use spaces.'
+    error_check_raise(file_name, r'\t', text, msg)
+    msg = '"\\text{{}}" used on line {}. Instead use "\\mathrm{{}}".'
+    error_check_raise(file_name, r'\\text{', text, msg)
+    msg = '"\\def{{}}" used in line {}. Not supported in MathJax.'
+    error_check_raise(file_name, r'\\def{', text, msg)
+    msg = 'Space used within "\\mathrm{{}}" on line {}. Instead use "\\,".'
+    error_check_raise(file_name, r'\\mathrm{[^ }]* ', text, msg)
+    msg = 'Space used in equation on line {}. Delete or replace with "{{}}" if needed.'
+    eqs = re.findall(r'\$+[^\$]*\$+', text)
+    for eq in eqs:
+        if ' ' in eq:
+            error_check_raise(file_name, re.escape(eq[eq.index(' '):]), text, msg)
+
+def txt2py(filename):
     """Parse input text format into Python objects.
 
     list of lines (str) -> list of questions (dict)
     """
 
     questions = []
+    with open(filename, 'r') as infile:
+        text = infile.read()
+
+    parse_checker(filename, text)
+
     # Inserting linebreak character for --bb case (<br>), this then
     # functions as placeholder for --latex case (\\)
-    text = re.sub(' *\n> *','<br>',infile.read())
-    # Mathjax cannot have > or < next to a letter (space needed) ignore <br>
-    text = re.sub(' *(?<!br)(<|>)(?!br) *', r' \1 ', text)
-    # Remove tabs to avoid confusing bb format
-    text = re.sub('\t', '', text)
+    text = re.sub(' *\n> *','<br>', text)
+    
     # This appears when using bmatrix etc. and should be flattened
     text = re.sub(r' *\\\\\n *',r'\\\\', text)
     # This flattens newlines that are escaped with '\'
-    text = re.sub(r' *\\\n *',' ', text)
-    # Replace all space in equations with {} to avoid Blackboard messing up
-    # Replace all space within \text or \mathrm with \', instead of {}
-    text = text.replace('\\text{','\\mathrm{')
-    eq_texts = re.findall(r'\\mathrm({.*?})', text)
-    for eq_text in eq_texts:
-        text = text.replace(eq_text, re.sub(' ','\\,', eq_text))
+    text = re.sub(r'\\\n','', text)
 
-    # Cannot have space after \left or \right as {} will be inserted after
-    text = re.sub(r'(\\left|\\right) +',r'\1', text)
-    # Should not have spaces between commands such as \begin{array} {l} or {l} \hline
-    text = re.sub(r'} +{', r'}{', text)
-    text = re.sub(r'} +\\', r'}\\', text)
-    text = re.sub(r'(\\\w*)? +\\', r'\1\\', text)
-
-    eqs = re.findall('\$+([^\$]+?)\$+', text)
-    for eq in eqs:
-        text = text.replace(eq,re.sub(' ','{}',eq))
-        
     lines = text.splitlines()
 
     for lineno, line in enumerate(lines, 1):
@@ -448,6 +486,8 @@ def txt2py(infile):
             question = {}
             question['answers'] = []
             questions.append(question)
+            # Variant question by default, new questions will be marked True
+            question['new'] = False
 
         # key : val
         elif ':' in line:
@@ -459,7 +499,7 @@ def txt2py(infile):
                 question[key] = val
             else:
                 question['answers'].append((key,val))
-    
+
     return questions
 
 
@@ -479,11 +519,18 @@ def q2bb1(question):
     else:
         raise ValueError("Unrecognised question type")
     items = handler.bb()
+    # Check if variant subnumbering is present and remove
+    var_num = re.findall(r"\\hspace{-5pt}\d+\. ", items[1])
+    if var_num: items[1] = items[1].strip(var_num[0])
+
     # Add Separating new line after question to avoid overcrowded look
     items[1]+='<p></p>'
     # Add image pointers for uploader to replace with actual image
     for i in range(len(items)):
         items[i] = re.sub('@{(.+?)}@', r'+++FIGURE "\1" HERE+++', items[i])
+    # Remove notes written for pdf version
+    if 'notes' in items:
+        del items[items.index('notes')-1:items.index('notes')+1]
     # Output must be tab-delimited, blackboard already uses $$ for its inbuilt
     # display math mode so these are changed to the MathJax configured one
     return "\t".join(items).replace("$$","~~")
@@ -514,17 +561,24 @@ def q2latex(questions):
     The result is a self-contained LaTeX document
     """
     yield from LATEX_START.splitlines()
-    yield from latex_enumerate(questions, q2latex1)
+    yield from latex_enumerate(questions, q2latex1, 1)
     yield from LATEX_END.splitlines()
 
 def latex_item(item):
+    typ, ans = item
     # Replaces line break symbol <br> from txt2py() and returns latex formatted line
-    item = (item[0],item[1].replace('<br>',r'\\'))
+    ans = ans.replace('<br>',r'\\')
     # Escape any % that aren't already as they comment out the line in Latex
-    item = (item[0],re.sub(r'(?<!\\)%','\\%', item[1]))
+    ans = re.sub(r'(?<!\\)%','\\%', ans)
     # Prevent answer lines from showing up in display mode
-    item = (item[0],item[1].replace('$$',r'$'))
-    return [r"\emph{%s}: %s" % item]
+    ans = ans.replace('$$',r'$')
+    # Handle partial marks
+    if '(' in str(typ):
+        par_cred = typ[typ.index('('):typ.index(')')+1]
+        typ = re.findall("[a-zA-Z]+", typ)[0]
+        return [r"\textbf{{{}}} - \emph{{{}}}: {}".format(par_cred, typ, ans)]
+
+    return [r"\emph{{{}}}: {}".format(typ, ans)]
 
 def q2latex1(question):
     """Convert single question to latex
@@ -534,38 +588,51 @@ def q2latex1(question):
     The result is a fragment of latex.
     """
     # Replaces line break symbol <br> from txt2py() and returns latex formatted line
-    prompt = question["prompt"].replace('<br>',r'\\\\')
+    prompt = question['prompt'].replace('<br>',r'\\\\')
     # Escape any % that aren't already as they comment out the line in Latex
     prompt = re.sub(r'(?<!\\)%','\\%', prompt)
     # Add specified images to Latex version at 0.7*textwidth
-    prompt = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}',prompt)
+    prompt = re.sub('@{(.+?)}@', r'\\includegraphics[width=0.7\\textwidth]{\1}', prompt)
     # Add specified images to answers aswell since this is (sort of) supported aswell
     for i in range(len(question['answers'])):
         text_with_im = re.sub('@{(.+?)}@',r'\\includegraphics[width=0.7\\textwidth]{\1}', question['answers'][i][1])
         question['answers'][i] = (question['answers'][i][0], text_with_im)
-                
-
+               
     yield prompt
-    if question["type"] in Q_TYPES:
+    if question['type'] in Q_TYPES:
+        notes = ''
+        keys = [item[0] for item in question['answers']]
+        if 'notes' in keys:
+            notes = question['answers'].pop(keys.index('notes'))[1]
         handler = HANDLERS[question["type"]](question)
         items = handler.latex()
-        if not items:
+        if not items and not notes:
             pass
-        # Enumeration not needed if 1 element or different pairings used
-        elif len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
-            for item in items:
-                yield ""
-                yield from latex_item(item)
         else:
-            yield from latex_enumerate(items, latex_item)
+            # Enumeration not needed if 1 element or different pairings used
+            if len(items) == 1 or question["type"] in ('ORD','MAT','JUMBLED_SENTENCE'):
+                for item in items:
+                    yield ""
+                    yield from latex_item(item)
+                yield ""
+            else:
+                yield from latex_enumerate(items, latex_item, 2)
+
+            if notes: yield r"\textbf{Notes: }"+notes
     else:
         raise ValueError("Unrecognised question type")
 
 
-def latex_enumerate(items, latex_item_func):
+def latex_enumerate(items, latex_item_func, level):
     """Wrap items in a latex enumerate"""
+    q_counter = -1
     yield ENUM_START
-    for item in items:
+    for num, item in enumerate(items):
+        # Check this is on question level, not answer level
+        if level==1:
+            if item['new']: q_counter+=1
+            yield r"\setcounter{enumi}{%d}"%q_counter
+            # If this is not a variant question, increase question counter
         yield ITEM
         yield from latex_item_func(item)
     yield ENUM_END
