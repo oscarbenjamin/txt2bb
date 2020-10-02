@@ -431,14 +431,22 @@ def error_check_raise(file_name, expr, text, msg):
         msg = '\n\n   '+file_name+': '+msg.format(line)+'\n'
         raise SyntaxError(msg)
 
+def warning_check_raise(file_name, expr, text, msg):
+    import warnings
+    if re.search(expr, text):
+        pos = re.search(expr, text).start()
+        line = text[:pos].count('\n') + 1
+        msg = '\n\n\n   '+file_name+': '+msg.format(line)+'\n\n'
+        warnings.warn(msg)
+
 def parse_checker(file_name, text):
     """Run through all known causes of errors when uploading to Blackboard and
     raise them to be fixed before any files are produced.
     """
-    msg = '"<" on line {} needs a space after it.'
-    error_check_raise(file_name, '<\S', text, msg)
-    msg = '">" on line {} needs a space before it.'
-    error_check_raise(file_name, '.\S>', text, msg)
+    msg = '"<" on line {} should have a space after it to avoid HTML clashes.'
+    warning_check_raise(file_name, '<\S', text, msg)
+    msg = '">" on line {} should have a space before it to avoid HTML clashes.'
+    warning_check_raise(file_name, '.\S>', text, msg)
     msg = 'Tab used on line {}. Instead use spaces.'
     error_check_raise(file_name, r'\t', text, msg)
     msg = '"\\text{{}}" used on line {}. Instead use "\\mathrm{{}}".'
