@@ -312,6 +312,15 @@ class FIB_PLUS(Question):
             items.append('')
         return items
 
+    def latex(self):
+        items = []
+        for var, ans in self.mappings.items():
+            if type(ans) == list:
+                items.append((var, ', '.join(ans)))
+            else:
+                items.append((var,str(ans)))
+        return items
+
 # Tuple of all classes for use in dictionary in txt2bb
 q_handlers = (MC, MA, TF, ESS, ORD, MAT, FIL, NUM, SR, OP, JUMBLED_SENTENCE, FIB_PLUS)
 
