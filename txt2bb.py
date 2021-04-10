@@ -283,10 +283,7 @@ class FIB_PLUS(Question):
     def __init__(self, question):
         Question.__init__(self, question)
         answers = [ans for _,ans in self.answers]
-        if any('(' in item[0] for item in self.answers):
-            raise ValueError("No partial marks allowed for fill in the blank questions")
         self.mappings = {}
-        ans_list = []
         for ans in answers:
             # Check variable has been linked to the choice
             if re.search(r':.*\w',ans):
@@ -294,12 +291,12 @@ class FIB_PLUS(Question):
                 # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',answers):
                     # Split at commas if not escaped with \
-                    ans = list(map(str.strip, answers.split(',')))
-                    ans_list += ans
+                    tmp_ans = answers.replace('\\,','¡') 
+                    ans = list(map(str.strip, tmp_ans.split(',')))
+                    ans = [a.replace('¡',',') for a in ans]
                 else:
                     # Otherwise save the single variable (removing any escape slashes)
                     ans = answers.replace('\\','')
-                    ans_list.append(ans)
 
                 self.mappings[variable] = ans
             else:
@@ -313,15 +310,6 @@ class FIB_PLUS(Question):
             else:
                 items.append(ans)
             items.append('')
-        return items
-
-    def latex(self):
-        items = []
-        for var, ans in self.mappings.items():
-            if type(ans) == list:
-                items.append((var, ', '.join(ans)))
-            else:
-                items.append((var,str(ans)))
         return items
 
 # Tuple of all classes for use in dictionary in txt2bb
