@@ -283,10 +283,7 @@ class FIB_PLUS(Question):
     def __init__(self, question):
         Question.__init__(self, question)
         answers = [ans for _,ans in self.answers]
-        if any('(' in item[0] for item in self.answers):
-            raise ValueError("No partial marks allowed for fill in the blank questions")
         self.mappings = {}
-        ans_list = []
         for ans in answers:
             # Check variable has been linked to the choice
             if re.search(r':.*\w',ans):
@@ -294,12 +291,12 @@ class FIB_PLUS(Question):
                 # Check if multiple variables (separated by commas) are present
                 if re.search(r'(?<!\\),',answers):
                     # Split at commas if not escaped with \
-                    ans = list(map(str.strip, answers.split(',')))
-                    ans_list += ans
+                    tmp_ans = answers.replace('\\,','¡') 
+                    ans = list(map(str.strip, tmp_ans.split(',')))
+                    ans = [a.replace('¡',',') for a in ans]
                 else:
                     # Otherwise save the single variable (removing any escape slashes)
                     ans = answers.replace('\\','')
-                    ans_list.append(ans)
 
                 self.mappings[variable] = ans
             else:
@@ -647,17 +644,18 @@ def latex_enumerate(items, latex_item_func, level):
 
 def make_outfiles(out_format, random, in_files, out_file):
     for f in in_files:
+        f_pure = f[:-4]
         if out_format == '--bb':
-            bb_file = f.strip('.txt')+'_bb.txt' if not out_file else out_file
+            bb_file = f_pure+'_bb.txt' if not out_file else out_file
             main(out_format, random, f, bb_file)
         
         elif out_format == '--latex':
-            latex_file = f.strip('.txt')+'.tex' if not out_file else out_file
+            latex_file = f_pure+'.tex' if not out_file else out_file
             main(out_format, random, f, latex_file)
         else:
-            main('--bb', random, f, f.strip('.txt')+'_bb.txt')
-            main('--latex', random, f, f.strip('.txt')+'.tex')
-            subprocess.run(['pdflatex',f.strip('.txt')+'.tex'])
+            main('--bb', random, f, f_pure+'_bb.txt')
+            main('--latex', random, f, f_pure+'.tex')
+            subprocess.run(['pdflatex',f_pure+'.tex'])
 
 if __name__ == "__main__":
     out_format = sys.argv[1]
